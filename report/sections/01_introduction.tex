@@ -1,0 +1,111 @@
+% =====================================================================
+\section{Mở đầu}\label{sec:introduction}
+% =====================================================================
+
+\subsection{Lý do chọn đề tài}\label{subsec:rationale}
+
+Trong kỷ nguyên dữ liệu lớn, kích thước các ma trận biểu diễn dữ liệu thực tế --
+ảnh số, ma trận đánh giá người dùng--sản phẩm, ma trận dữ liệu cảm biến, văn bản
+biểu diễn dưới dạng tần số từ -- thường vượt xa khả năng lưu trữ và xử lý trực
+tiếp. Trong bối cảnh đó, phân tích giá trị kỳ dị (\emph{Singular Value
+Decomposition} -- SVD) là một trong những công cụ trung tâm của đại số tuyến
+tính số hiện đại: nó cho phép tách một ma trận bất kỳ thành tích của ba ma trận
+có cấu trúc đẹp, từ đó cung cấp cơ sở toán học cho một loạt ứng dụng quan
+trọng như nén dữ liệu, khử nhiễu, giảm chiều, hệ thống gợi ý và xử lý ảnh.
+
+Tuy nhiên, thuật toán SVD cổ điển dựa trên giai đoạn tridiagonalize Golub--Kahan
+hoặc các biến thể Jacobi có độ phức tạp thời gian
+$\mathcal{O}(mn\min(m,n))$ và đòi hỏi truy xuất toàn bộ ma trận nhiều lần.
+Khi kích thước ma trận $m, n$ đạt mức $10^5$ trở lên -- vốn rất phổ biến trong
+các bộ dữ liệu thực tế như MovieLens hay các ma trận hình ảnh độ phân giải cao
+-- cách tiếp cận này trở nên bất khả thi cả về thời gian lẫn bộ nhớ. Năm 2011,
+N.~Halko, P.-G.~Martinsson và J.~A.~Tropp đã hệ thống hóa một họ phương pháp
+mang tính đột phá có tên \emph{Randomized SVD}: dùng phép chiếu ngẫu nhiên để
+rút trích nhanh một không gian con xấp xỉ tốt cho $k$ giá trị kỳ dị lớn nhất,
+sau đó chỉ chạy SVD cổ điển trên một ma trận nhỏ hơn nhiều. Phương pháp này có
+cơ sở toán học vững chắc, sai số kiểm soát được dưới dạng kỳ vọng và độ lệch
+chuẩn, dễ song song hóa và đặc biệt hiệu quả với ma trận thưa.
+
+Đề tài tập trung vào Randomized SVD vì ba lý do căn bản:
+
+\begin{itemize}
+    \item \textbf{Tầm quan trọng toán học:} Randomized SVD là một kết quả tiêu
+    biểu của đại số tuyến tính số kết hợp với lý thuyết xác suất hiện đại
+    (xác suất tập trung, bất đẳng thức ma trận nhân tử). Nó cũng là cầu nối
+    quan trọng giữa lý thuyết phổ và các phương pháp Monte~Carlo.
+    \item \textbf{Lĩnh vực áp dụng rộng:} học máy (Latent Semantic Analysis,
+    Principal Component Analysis), xử lý ảnh (image compression, khử nhiễu),
+    hệ thống gợi ý (Netflix Prize), nén tín hiệu, mô hình hóa ngôn ngữ và tin
+    sinh học (gene expression analysis).
+    \item \textbf{Vấn đề thực tế cụ thể:} bài toán giảm dung lượng lưu trữ và
+    rút gọn chiều biểu diễn cho dữ liệu lớn, sao cho vẫn giữ được một tỉ lệ
+    năng lượng (information content) $\eta$ cho trước. Đây là một bài toán
+    điển hình mà sinh viên kỹ thuật cần thuần thục: cân bằng giữa độ chính
+    xác xấp xỉ và chi phí lưu trữ/tính toán.
+\end{itemize}
+
+\subsection{Mục tiêu của đề tài}\label{subsec:goals}
+
+Báo cáo hướng tới các kết quả cụ thể, có thể kiểm chứng được sau đây:
+
+\begin{enumerate}
+    \item \textbf{Cơ sở lý thuyết:} Trình bày đầy đủ và nghiêm túc cơ sở toán
+    học của SVD đầy đủ, Compact SVD và Randomized SVD; nêu rõ ý nghĩa
+    hình học cũng như đại số của các đại lượng $U$, $\Sigma$, $V$. Phần này
+    được trình bày trong \cref{sec:theory}.
+
+    \item \textbf{Tiêu chuẩn chọn $k$ theo tỉ lệ năng lượng:} Xây dựng và
+    biện luận công thức
+    \[
+        \frac{\sum_{i=1}^{k}\sigma_i^2}{\sum_{i=1}^{r}\sigma_i^2} \;\ge\; \eta,
+    \]
+    đồng thời phân tích ý nghĩa của tham số $\eta$ trong việc kiểm soát đánh
+    đổi giữa độ chính xác và mức độ nén.
+
+    \item \textbf{Cài đặt thuật toán Randomized SVD} (\cref{sec:algorithm}):
+    nhóm tự viết phiên bản đầy đủ với các bước phép chiếu ngẫu nhiên Gauss,
+    \emph{power iteration} tăng độ tách phổ, trực giao hóa QR và SVD đầy đủ
+    trên ma trận nhỏ. \emph{Không} sử dụng trực tiếp các hàm SVD đầy đủ trên
+    ma trận gốc.
+
+    \item \textbf{Áp dụng cho ma trận thực kích thước lớn:} sử dụng bộ dữ liệu
+    \mlSource{} với $m \times n = \mlM \times \mlN$ và $\mathrm{nnz} = \mlNNZ$
+    (vượt yêu cầu $10^5$ phần tử của đề bài), cùng một ảnh xám
+    $512\times 512$ làm trường hợp dữ liệu \emph{dày}.
+
+    \item \textbf{Đánh giá định lượng:} đo sai số xấp xỉ
+    $\|A - A_k\|_F$ theo chuẩn Frobenius, tỉ lệ năng lượng giữ lại $S_k/\|A\|_F^2$,
+    thời gian chạy so với SVD cổ điển và \texttt{scikit-learn}.
+
+    \item \textbf{Phát hiện điều kiện break-even cho nén:} rút ra điều kiện
+    định lượng $k_{be} = \mathrm{nnz}(A)/(m+n+1)$ cho biết với loại ma trận
+    nào thì Randomized SVD nén được dung lượng -- một kết quả thực tế quan
+    trọng nhưng thường bị các tài liệu chuẩn bỏ qua.
+\end{enumerate}
+
+\subsection{Phạm vi nghiên cứu}\label{subsec:scope}
+
+\begin{itemize}
+    \item \textbf{Đối tượng nghiên cứu:} ma trận thực
+    $A \in \mathbb{R}^{m\times n}$ với $m \cdot n \ge 10^5$. Hai loại
+    dữ liệu được khảo sát: ma trận \emph{thưa} (rating matrix MovieLens 25M)
+    và ma trận \emph{dày} (ảnh xám tiêu chuẩn \texttt{skimage.data.camera}).
+
+    \item \textbf{Mức độ lý thuyết--ứng dụng:} báo cáo trình bày cân bằng giữa
+    lý thuyết và ứng dụng: chứng minh chặt chẽ các định lý nền tảng (định lý
+    phổ, định lý Eckart--Young, hệ quả về chuẩn Frobenius) đi kèm các
+    chứng minh hoặc phác thảo chứng minh; mọi kết quả số đều dựa trên thực
+    nghiệm độc lập bằng cài đặt tự viết.
+
+    \item \textbf{Nội dung không xét đến:} các phiên bản phân tán
+    (distributed) hay GPU-accelerated của Randomized SVD; các biến thể khối
+    (block Lanczos, randomized block Krylov) phức tạp; phân tích sai số xác
+    suất ở mức kỹ thuật (chỉ trình bày bound kỳ vọng dạng định tính).
+\end{itemize}
+
+Sau \cref{sec:introduction}, báo cáo được tổ chức như sau: \cref{sec:theory}
+trình bày cơ sở lý thuyết của SVD, Compact SVD và định lý Eckart--Young;
+\cref{sec:algorithm} mô tả chi tiết thuật toán Randomized SVD cùng phân tích
+độ phức tạp và sai số; \cref{sec:experiments} báo cáo kết quả thực nghiệm
+trên hai bộ dữ liệu thực; cuối cùng \cref{sec:conclusion} tổng kết và đề xuất
+hướng phát triển.

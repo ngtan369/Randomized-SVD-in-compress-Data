@@ -1,0 +1,126 @@
+% =====================================================================
+\section{Kết luận và hướng phát triển}\label{sec:conclusion}
+% =====================================================================
+
+\subsection{Tóm tắt kết quả đạt được}\label{subsec:summary}
+
+Báo cáo đã trình bày \emph{trọn vẹn} chuỗi nội dung mà đề tài 10 yêu cầu, từ
+cơ sở lý thuyết đến thực nghiệm:
+
+\begin{itemize}
+    \item \textbf{Lý thuyết (\cref{sec:theory}):} chứng minh hoặc phác thảo
+    chứng minh các kết quả nền tảng -- định lý phân tích giá trị kỳ dị
+    (\cref{thm:svd}), định lý Eckart--Young (\cref{thm:eckart-young}), công
+    thức phân rã năng lượng (\cref{prop:energy}) và hệ quả về sai số xấp xỉ
+    theo tỉ lệ năng lượng (\cref{cor:error-bound}). Ý nghĩa hình học của SVD
+    được minh hoạ bằng hình vẽ TikZ tự xây dựng (\cref{fig:svd-geometry}).
+
+    \item \textbf{Thuật toán (\cref{sec:algorithm}):} mô tả chính thức
+    Randomized SVD trong \cref{alg:rsvd} với giải thích cơ sở toán học cho
+    từng bước (chiếu ngẫu nhiên Gauss, over-sampling, power iteration, trực
+    giao hóa QR, SVD trên ma trận thu nhỏ). Phân tích độ phức tạp
+    \eqref{eq:rsvd-cost} cho thấy gia tốc lý thuyết $\Theta(\min(m,n)/\ell)$
+    so với SVD cổ điển; bound sai số Halko--Martinsson--Tropp
+    (\cref{thm:hmt-bound}) khẳng định Randomized SVD chỉ \emph{lệch một hằng
+    số nhỏ} so với optimum.
+
+    \item \textbf{Cài đặt:} hoàn thiện file \texttt{src/rsvd.py} thuần
+    \texttt{NumPy}/\texttt{SciPy}, hỗ trợ cả ma trận dày lẫn ma trận thưa,
+    \emph{không} dùng SVD đầy đủ trên $A$. Sai số xấp xỉ tương đối với
+    \texttt{numpy.linalg.svd} dưới $0.01\%$ ở rank-$k$ trên dữ liệu Gauss
+    (\cref{subsec:bench}).
+
+    \item \textbf{Thực nghiệm trên hai bộ dữ liệu thực:}
+    \begin{itemize}
+        \item Ảnh xám $512\times 512$ (\cref{subsec:exp-image}):
+        Randomized SVD \emph{nén thật} -- $5\times$ ở $k = 50$ với năng lượng
+        $\sim 99.6\%$ và sai số tương đối $\sim 6\%$.
+
+        \item MovieLens 25M (\cref{subsec:exp-movielens}): kích thước
+        $\mlM\times\mlN$, $\mathrm{nnz} = \mlNNZ$, mật độ \mlDensity. Biểu
+        diễn nén \emph{lớn hơn} CSR gốc $\sim 28\times$ -- $44\times$ tuỳ
+        $\eta$, do $k^\star \gg k_{be}^{\text{thưa}} = \mlKbe$.
+    \end{itemize}
+
+    \item \textbf{Phát hiện điều kiện break-even cho nén}
+    \eqref{eq:be-sparse}: với ma trận thưa, SVD chỉ nén được dung lượng khi
+    $k < \mathrm{nnz}/(m+n+1)$. Trong các bài toán xếp hạng người dùng--sản
+    phẩm điển hình, điều kiện này \emph{hiếm khi thoả mãn} -- một kết quả
+    thực tế quan trọng nhưng thường bị các tài liệu chuẩn bỏ qua.
+
+    \item \textbf{Benchmark hiệu năng:} Custom RSVD đạt speedup $\sim 38\times$
+    so với full SVD ở $n = 2000$, tỷ số tăng theo $n$ đúng như lý thuyết.
+\end{itemize}
+
+\subsection{Ưu điểm và hạn chế của Randomized SVD}\label{subsec:pros-cons}
+
+\paragraph{Ưu điểm.}
+\begin{itemize}
+    \item Độ phức tạp giảm từ $\mathcal{O}(mn\min(m,n))$ xuống
+    $\mathcal{O}((mn + (m+n)\ell)\ell)$ với $\ell = k+p$ nhỏ.
+    \item Tận dụng tốt cấu trúc thưa: phép nhân $A\Omega$ và $A^T Q$ duy trì
+    chi phí $\mathcal{O}(\mathrm{nnz}\cdot \ell)$ thay vì $\mathcal{O}(mn\ell)$.
+    \item Dễ song song hóa: phép nhân ma trận-véc-tơ, QR và SVD nhỏ đều có
+    cài đặt phân tán hiệu quả (BLAS/MAGMA, Dask, Spark MLlib).
+    \item Sai số kiểm soát được bằng bound Halko--Tropp (\cref{thm:hmt-bound}),
+    lệch một hằng số nhỏ so với xấp xỉ Eckart--Young tối ưu.
+    \item Không cần lưu toàn bộ $A$ trong RAM cùng lúc: chỉ cần thực hiện
+    được hai phép $A\Omega$ và $A^T Q$ (phù hợp dữ liệu out-of-core).
+\end{itemize}
+
+\paragraph{Hạn chế.}
+\begin{itemize}
+    \item \emph{Không} hiệu quả về dung lượng nén khi áp dụng cho ma trận
+    \emph{rất thưa} và phổ kỳ dị suy giảm chậm -- xem
+    \cref{subsec:exp-movielens}.
+    \item Khi phổ kỳ dị suy giảm chậm
+    ($\sigma_{k+1}/\sigma_k$ gần $1$), cần thêm power iteration để tăng
+    chính xác, làm tăng chi phí tính toán.
+    \item Tính chất xác suất: kết quả phụ thuộc vào ma trận chiếu ngẫu nhiên
+    $\Omega$. Tuy nhiên với $p \ge 10$, xác suất thất bại đã rất nhỏ.
+    \item Không phù hợp khi cần \emph{toàn bộ} SVD (ví dụ tính
+    pseudo-inverse với chính xác đầy đủ) -- chỉ cho xấp xỉ tốt nhất ở
+    rank-$k$.
+\end{itemize}
+
+\subsection{So sánh ngắn với các phương pháp khác}\label{subsec:compare}
+
+\begin{itemize}
+    \item \textbf{SVD cổ điển (LAPACK \texttt{GESVD}):} chính xác máy nhưng
+    tốn kém về bộ nhớ ($\mathcal{O}(mn)$ cho ma trận dày hóa) và thời gian
+    $\mathcal{O}(mn\min(m,n))$. Chỉ khả thi với ma trận vừa và nhỏ.
+
+    \item \textbf{Lanczos/ARPACK (\texttt{scipy.sparse.linalg.svds}):} tính
+    nhanh một số giá trị kỳ dị lớn của ma trận thưa qua phương pháp lặp
+    Krylov. Chính xác cao, nhưng nhạy với phổ tập trung
+    (clustered spectrum) và khó song song hóa hiệu quả.
+
+    \item \textbf{Randomized SVD:} cân bằng tốt giữa tốc độ, độ chính xác và
+    khả năng song song. Là lựa chọn mặc định trong các thư viện ML hiện đại
+    (scikit-learn, RAPIDS cuML, Spark MLlib).
+\end{itemize}
+
+\subsection{Hướng phát triển}\label{subsec:future}
+
+\begin{itemize}
+    \item \textbf{Streaming / one-pass Randomized SVD:} cho dữ liệu không thể
+    nạp toàn bộ vào RAM, áp dụng kỹ thuật \emph{sketching} của
+    Tropp et al.~\cite{tropp2017}.
+
+    \item \textbf{Phiên bản GPU-accelerated:} cài đặt \cref{alg:rsvd} bằng
+    \texttt{torch.linalg} hoặc \texttt{cupy} để tận dụng GPU, đặc biệt với
+    ma trận dày kích thước rất lớn ($n > 10\,000$). Kỳ vọng speedup
+    $10$--$50\times$ so với CPU.
+
+    \item \textbf{Ứng dụng tiếp theo trong hệ thống gợi ý:} với
+    $(U_k, V_k)$ thu được trên ma trận MovieLens, xây dựng một hệ thống gợi
+    ý phim đơn giản và đánh giá RMSE trên tập kiểm tra, so sánh với các
+    phương pháp như ALS (Alternating Least Squares) hoặc collaborative
+    filtering.
+
+    \item \textbf{Phân tích lý thuyết sâu hơn:} chứng minh chi tiết
+    \cref{thm:hmt-bound} (sai số kỳ vọng) và mở rộng sang bound xác suất cao
+    (high-probability bound) dựa trên bất đẳng thức ma trận tập trung của
+    Tropp.
+\end{itemize}
+

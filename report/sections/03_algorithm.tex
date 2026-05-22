@@ -1,0 +1,253 @@
+% =====================================================================
+\section{Thuật toán Randomized SVD}\label{sec:algorithm}
+% =====================================================================
+
+\subsection{Ý tưởng cốt lõi}\label{subsec:rsvd-idea}
+
+Với ma trận $A \in \mathbb{R}^{m\times n}$ kích thước cực lớn, ta chỉ thực sự
+cần thông tin về \emph{không gian con chính} $\operatorname{range}(A_k)$ --
+nơi tập trung gần như toàn bộ năng lượng. Nếu xác định được một ma trận
+trực giao $Q \in \mathbb{R}^{m\times \ell}$ ($\ell$ nhỏ, $\ell \ll \min(m,n)$)
+sao cho
+\begin{equation}\label{eq:Q-good}
+    A \;\approx\; Q\, Q^T A,
+\end{equation}
+thì việc tính SVD của $A$ quy về tính SVD của ma trận
+$B = Q^T A \in \mathbb{R}^{\ell\times n}$ -- kích thước nhỏ hơn rất nhiều.
+
+\emph{Quan sát then chốt} của Halko, Martinsson và Tropp~\cite{halko2011}:
+nếu lấy $\Omega \in \mathbb{R}^{n\times \ell}$ là ma trận ngẫu nhiên với các
+phần tử i.i.d.\ $\mathcal{N}(0, 1)$, thì hầu như chắc chắn (với xác suất rất
+gần $1$) các cột của $Y = A\Omega$ phủ kín không gian con chính của $A$. Cụ
+thể, với $\ell = k + p$ trong đó $p \ge 5$ là tham số \emph{over-sampling},
+ta thu được xấp xỉ \eqref{eq:Q-good} với sai số kiểm soát được dưới dạng kỳ
+vọng (xem \cref{subsec:error-bound}).
+
+\subsection{Mô tả thuật toán}\label{subsec:rsvd-pseudocode}
+
+Thuật toán được trình bày chính thức trong \cref{alg:rsvd}. Đầu vào là ma trận
+$A$, hạng đích $k$, tham số over-sampling $p$ (mặc định $p = 10$) và số bước
+power iteration $q$ (mặc định $q = 1$--$2$).
+
+\begin{algorithm}[ht]
+\caption{Randomized SVD (Halko--Martinsson--Tropp 2011)}\label{alg:rsvd}
+\begin{algorithmic}[1]
+\Require Ma trận $A \in \mathbb{R}^{m\times n}$; hạng đích $k$;
+         over-sampling $p$; số bước power iteration $q$; seed ngẫu nhiên.
+\Ensure  $U \in \mathbb{R}^{m\times k}$,
+         $s \in \mathbb{R}^{k}$ (giảm dần),
+         $V^T \in \mathbb{R}^{k\times n}$, sao cho $A \approx U \operatorname{diag}(s) V^T$.
+\State $\ell \gets \min(k + p,\; n)$
+    \Comment{kích thước sketch}
+\State Sinh $\Omega \in \mathbb{R}^{n\times \ell}$ với các phần tử
+       i.i.d.\ $\mathcal{N}(0,1)$
+    \Comment{ma trận chiếu Gauss}
+\State $Y \gets A\,\Omega$
+    \Comment{$Y \in \mathbb{R}^{m\times \ell}$: ``sketch'' không gian cột}
+\For{$i = 1$ to $q$} \Comment{power iteration: tăng độ tách phổ}
+    \State $Q,\, R \gets \text{QR}(Y)$
+        \Comment{tái trực giao hóa chống suy thoái số}
+    \State $Z \gets A^T Q$
+    \State $Q_2,\, R_2 \gets \text{QR}(Z)$
+    \State $Y \gets A\, Q_2$
+\EndFor
+\State $Q,\, R \gets \text{QR}(Y)$
+    \Comment{cơ sở trực chuẩn cho $\operatorname{range}(Y)$}
+\State $B \gets Q^T A$
+    \Comment{$B \in \mathbb{R}^{\ell\times n}$: ``thu nhỏ'' ma trận gốc}
+\State $\widetilde{U},\, s,\, V^T \gets \text{SVD}(B)$
+    \Comment{SVD đầy đủ trên ma trận nhỏ}
+\State $U \gets Q\, \widetilde{U}$
+    \Comment{lift về không gian gốc}
+\State \Return $U[:, :k]$, $s[:k]$, $V^T[:k, :]$
+    \Comment{truncate về hạng $k$}
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Cơ sở toán học của mỗi bước}\label{subsec:rsvd-justify}
+
+\paragraph{Tại sao $Y = A\Omega$ chứa không gian con chính của $A$?}
+Viết SVD $A = U\Sigma V^T$, ta có
+\[
+    A \Omega \;=\; U\Sigma V^T \Omega \;=\; U\Sigma\, \widetilde{\Omega},
+\]
+với $\widetilde{\Omega} = V^T \Omega \in \mathbb{R}^{n\times \ell}$ vẫn có
+phân bố Gauss chuẩn (do $V^T$ là trực giao). Mỗi cột của $Y$ là tổ hợp tuyến
+tính ngẫu nhiên của các cột của $U\Sigma$, với trọng số tỉ lệ với $\sigma_i$.
+Vì $\sigma_1 \ge \dots \ge \sigma_k \gg \sigma_{k+1}$ (giả định phổ có gap),
+các thành phần $u_1, \dots, u_k$ thống trị trong $Y$. Khi $\ell \ge k$, với
+xác suất gần $1$, $\operatorname{span}(Y) \approx \operatorname{span}(u_1, \dots, u_k)$.
+
+\paragraph{Vai trò của over-sampling $p$.}
+Nếu chỉ lấy $\ell = k$, ma trận ngẫu nhiên $\widetilde{\Omega}$ có thể có hạng
+không đầy đủ trên không gian con đầu (xác suất thấp nhưng khác $0$). Thêm
+$p$ cột ngẫu nhiên \emph{ngoài} $k$ giúp triệt tiêu xác suất này: với $p = 10$,
+xác suất thất bại xuống dưới $10^{-15}$~\cite{halko2011}.
+
+\paragraph{Vai trò của power iteration.}
+Nếu phổ kỳ dị của $A$ suy giảm chậm
+(ratio $\sigma_{k+1}/\sigma_k$ gần $1$), thuật toán cơ sở (không power
+iteration) có thể bắt được thành phần $\sigma_{k+1}, \sigma_{k+2}, \dots$ một
+cách nhầm lẫn. Quan sát: ma trận $(A A^T)^q A$ có cùng véc-tơ kỳ dị với $A$
+nhưng phổ bị \emph{nén lũy thừa} -- giá trị kỳ dị thứ $i$ trở thành
+$\sigma_i^{2q+1}$, do đó tỉ số trở thành $(\sigma_{k+1}/\sigma_k)^{2q+1}$. Mỗi
+bước power iteration tăng độ tách phổ theo \emph{cấp số nhân}. Trong cài đặt
+thực tế, ta áp dụng QR sau mỗi bước nhân (dòng 5--8 của \cref{alg:rsvd}) để
+tránh tràn số do mũ cao.
+
+\paragraph{Tại sao $B = Q^T A$ giữ nguyên thông tin kỳ dị?}
+Nếu $\operatorname{range}(Q) \approx \operatorname{range}(A_k)$ thì
+$Q Q^T A \approx A_k$, tức $Q^T A$ chứa toàn bộ thông tin về $\Sigma$ và $V$
+của $A_k$. Tính SVD $B = \widetilde{U} \Sigma V^T$ cho ta trực tiếp $\Sigma, V$;
+còn $U = Q\widetilde{U}$ là $\widetilde{U}$ ``nâng lên'' không gian
+$\mathbb{R}^m$ ban đầu thông qua $Q$.
+
+\subsection{Phân tích độ phức tạp}\label{subsec:complexity}
+
+Đặt $\ell = k + p$. Chi phí từng bước của \cref{alg:rsvd}:
+
+\begin{table}[ht]
+\centering
+\caption{Chi phí của các bước trong \cref{alg:rsvd}, với
+$A$ dày so với $A$ thưa có $\mathrm{nnz}$ phần tử khác $0$.}
+\label{tab:complexity}
+\begin{tabular}{lll}
+\toprule
+\textbf{Bước} & \textbf{$A$ dày} & \textbf{$A$ thưa} \\
+\midrule
+Sinh $\Omega$              & $\mathcal{O}(n\ell)$
+                           & $\mathcal{O}(n\ell)$ \\
+$Y = A\,\Omega$            & $\mathcal{O}(mn\ell)$
+                           & $\mathcal{O}(\mathrm{nnz}\cdot\ell)$ \\
+$q$ bước power iteration   & $\mathcal{O}(q\cdot mn\ell)$
+                           & $\mathcal{O}(q\cdot \mathrm{nnz}\cdot\ell)$ \\
+QR của $Y$                 & $\mathcal{O}(m\ell^2)$
+                           & $\mathcal{O}(m\ell^2)$ \\
+$B = Q^T A$                & $\mathcal{O}(mn\ell)$
+                           & $\mathcal{O}(\mathrm{nnz}\cdot\ell)$ \\
+SVD của $B$ (kích thước $\ell\times n$) & $\mathcal{O}(n\ell^2)$
+                                        & $\mathcal{O}(n\ell^2)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Tổng chi phí (bỏ qua hằng số):
+\begin{equation}\label{eq:rsvd-cost}
+\boxed{\;\mathcal{C}_{\mathrm{RSVD}} \;=\;
+    \mathcal{O}\bigl((mn + (m + n)\ell)\,\ell\bigr)
+\;\text{(dày)},
+\quad
+    \mathcal{O}\bigl(\mathrm{nnz}\cdot\ell + (m+n)\ell^2\bigr)
+\;\text{(thưa)}.}
+\end{equation}
+
+So với SVD cổ điển $\mathcal{O}(mn\min(m,n))$: khi $\ell = k + p \ll \min(m, n)$,
+tỷ số gia tốc lý thuyết là $\Theta(\min(m,n)/\ell)$. Với $m = n = 10^5$ và
+$k = 500$, tỉ lệ này lên tới $\sim 200\times$. Trên ma trận thưa, lợi thế còn
+lớn hơn nhiều do tận dụng được cấu trúc $\mathrm{nnz} \ll mn$.
+
+\subsection{Sai số xấp xỉ}\label{subsec:error-bound}
+
+\begin{theorem}[Halko--Martinsson--Tropp~\cite{halko2011}]\label{thm:hmt-bound}
+Cho $A \in \mathbb{R}^{m\times n}$ và $\Omega \in \mathbb{R}^{n\times (k+p)}$
+là ma trận ngẫu nhiên Gauss chuẩn, $p \ge 2$. Gọi $Q$ là ma trận trực giao
+xây dựng từ QR của $A\Omega$. Khi đó kỳ vọng sai số xấp xỉ thỏa mãn
+\begin{equation}\label{eq:hmt-bound}
+    \mathbb{E}\bigl[\, \|A - Q Q^T A\|_F\,\bigr]
+       \;\le\; \biggl(1 + \frac{k}{p - 1}\biggr)^{1/2}\,
+               \biggl(\sum_{i > k}\sigma_i^2\biggr)^{1/2}.
+\end{equation}
+\end{theorem}
+
+\begin{remark}[So với Eckart--Young]
+Theo \cref{thm:eckart-young}, xấp xỉ hạng-$k$ tốt nhất có sai số chính bằng
+$\sqrt{\sum_{i>k}\sigma_i^2}$. \cref{thm:hmt-bound} cho thấy Randomized SVD
+chỉ \emph{lệch một hằng số nhỏ} so với optimum. Với $p = 10$ và $k = 100$,
+hệ số trước căn là $\sqrt{1 + 100/9} \approx 3.5$. Khi thêm $q$ bước power
+iteration, bound thực tế còn chặt hơn đáng kể (xem định lý 10.7
+của~\cite{halko2011}).
+\end{remark}
+
+\subsection{Tiêu chuẩn chọn $k$ trong ngữ cảnh Randomized SVD}\label{subsec:k-selection}
+
+Trong ngữ cảnh Randomized SVD, ta chỉ tính được $\ell = k_{\max} + p$ giá trị
+kỳ dị đầu tiên. Để chọn $k$ thỏa mãn \eqref{eq:energy-criterion} cần biết
+\emph{tổng} năng lượng $\|A\|_F^2$. Tuy nhiên, đại lượng này có thể tính
+\emph{trực tiếp} từ $A$ mà không cần SVD đầy đủ:
+
+\begin{equation}\label{eq:total-energy-direct}
+    \|A\|_F^2 \;=\; \sum_{i, j} a_{ij}^2.
+\end{equation}
+
+Với ma trận thưa lưu dưới định dạng CSR/CSC, công thức
+\eqref{eq:total-energy-direct} chỉ tốn $\mathcal{O}(\mathrm{nnz}(A))$ -- một
+phép cộng các bình phương của các phần tử khác $0$. Đây là một điểm tinh tế
+\emph{bị bỏ qua trong nhiều cài đặt}: nếu lấy
+$\sum_{i \le k_{\max}}\sigma_i^2$ làm tổng năng lượng (như notebook gốc ban
+đầu của nhóm), ta sẽ overestimate tỉ lệ năng lượng giữ lại vì phần đuôi
+$i > k_{\max}$ bị bỏ qua hoàn toàn.
+
+\medskip
+\noindent\textbf{Quy trình chọn $k$ (được dùng trong toàn bộ thực nghiệm):}
+\begin{enumerate}[label=(\arabic*)]
+    \item Chọn ngưỡng $\eta \in (0, 1)$;
+    \item Tính $E = \|A\|_F^2$ trực tiếp từ \eqref{eq:total-energy-direct};
+    \item Chạy Randomized SVD bậc $k_{\max}$ đủ lớn, thu
+          $\sigma_1 \ge \sigma_2 \ge \dots \ge \sigma_{k_{\max}}$;
+    \item Tính $S_k = \sum_{i=1}^{k}\sigma_i^2$. Chọn
+          $k^\star = \min\{k\colon S_k/E \ge \eta\}$;
+    \item Nếu $S_{k_{\max}}/E < \eta$, tăng $k_{\max}$ và lặp lại.
+\end{enumerate}
+
+\subsection{Điều kiện break-even cho nén dữ liệu}\label{subsec:break-even}
+
+Lưu trữ biểu diễn nén $(U_k, \Sigma_k, V_k)$ chiếm $k(m + n + 1)$ phần tử
+\texttt{float64}. So với ma trận gốc:
+
+\begin{itemize}
+    \item \emph{Ma trận dày}: nguyên bản chiếm $mn$ phần tử, do đó cần
+    $k(m+n+1) < mn$, hay
+    \begin{equation}\label{eq:be-dense}
+        k \;<\; k_{be}^{\text{dày}} \;=\; \frac{mn}{m + n + 1}
+        \;\approx\; \frac{\min(m, n)}{2}.
+    \end{equation}
+    Điều kiện này dễ dàng thỏa mãn trong thực tế.
+
+    \item \emph{Ma trận thưa} (lưu CSR): nguyên bản chiếm
+    $\sim \mathrm{nnz}$ phần tử (cộng index overhead), do đó
+    \begin{equation}\label{eq:be-sparse}
+        k \;<\; k_{be}^{\text{thưa}} \;=\; \frac{\mathrm{nnz}(A)}{m + n + 1}.
+    \end{equation}
+    Với ma trận \emph{rất thưa} (mật độ thấp), $k_{be}^{\text{thưa}}$ rất nhỏ
+    và việc nén bằng SVD hiếm khi có lợi về dung lượng.
+\end{itemize}
+
+\eqref{eq:be-sparse} là kết quả thực tế quan trọng được nhóm phát hiện trong
+quá trình thực nghiệm với MovieLens 25M (\cref{sec:experiments}): mặc dù
+$k^\star$ đạt năng lượng cao, $k^\star \gg k_{be}^{\text{thưa}}$ nên SVD
+\emph{không nén được dữ liệu thưa} -- biểu diễn nén còn lớn hơn ma trận gốc.
+
+\subsection{Tóm tắt cài đặt}\label{subsec:impl-summary}
+
+Nhóm cài đặt \cref{alg:rsvd} trong tệp \texttt{src/rsvd.py} dùng thuần
+\texttt{NumPy}/\texttt{SciPy}. Hàm chính có chữ ký:
+
+\begin{lstlisting}[caption={Chữ ký hàm Randomized SVD tự cài
+(\texttt{src/rsvd.py}).},label={lst:rsvd-api}]
+def randomized_svd(A, k, p=10, q=2, random_state=None):
+    """
+    Truncated SVD via random projection (Halko-Martinsson-Tropp).
+
+    Returns
+    -------
+    U  : ndarray, shape (m, k)
+    s  : ndarray, shape (k,)
+    Vt : ndarray, shape (k, n)
+    """
+\end{lstlisting}
+
+Cài đặt hỗ trợ \emph{cả} ma trận dày (\texttt{numpy.ndarray}) lẫn ma trận thưa
+(\texttt{scipy.sparse}): phép nhân $A\Omega$ và $A^T Q$ được thực hiện thông
+qua hàm \texttt{\_matmat}/\texttt{\_rmatmat} bao bọc, gọi đúng routine cho
+từng loại đầu vào. Toàn bộ mã chỉ phụ thuộc \texttt{numpy} và \texttt{scipy};
+không có lời gọi nào tới SVD đầy đủ trên $A$.

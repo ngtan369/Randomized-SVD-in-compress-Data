@@ -1,0 +1,336 @@
+% =====================================================================
+\section{Kết quả, sản phẩm và thực nghiệm}\label{sec:experiments}
+% =====================================================================
+
+Phần này trình bày kết quả thực nghiệm trên \emph{hai} bộ dữ liệu thực,
+benchmark cài đặt tự viết với \texttt{scikit-learn} và \texttt{NumPy}, cùng
+phân tích chi tiết các kết quả.
+
+\subsection{Mô tả dữ liệu}\label{subsec:data}
+
+\subsubsection{Bộ dữ liệu chính: MovieLens 25M}\label{subsubsec:movielens}
+
+\textbf{Nguồn dữ liệu.} Bộ dữ liệu \mlSource{} do GroupLens Research (Đại học
+Minnesota) phát hành công khai, đồng thời được mirror trên Kaggle
+(\url{https://www.kaggle.com/datasets/grouplens/movielens-25m-dataset}).
+Notebook của nhóm tải trực tiếp từ trang chính thức
+\url{https://files.grouplens.org/datasets/movielens/ml-25m.zip} (ZIP ~250 MB).
+
+\textbf{Cấu trúc tệp \texttt{ratings.csv}.} Mỗi dòng là một bộ ba
+$(\texttt{userId}, \texttt{movieId}, \texttt{rating})$ trong đó:
+\begin{itemize}
+    \item \texttt{userId} $\in \mathbb{Z}_{>0}$: định danh duy nhất của
+    người dùng (sau khi ẩn danh hóa).
+    \item \texttt{movieId} $\in \mathbb{Z}_{>0}$: định danh duy nhất của
+    bộ phim. Bảng tra cứu tên phim nằm trong \texttt{movies.csv}.
+    \item \texttt{rating} $\in \{0.5, 1.0, 1.5, \dots, 5.0\}$: điểm đánh
+    giá người dùng cho phim (rời rạc, $10$ mức).
+    \item \texttt{timestamp}: thời điểm đánh giá -- không sử dụng trong
+    báo cáo.
+\end{itemize}
+
+\textbf{Tiền xử lý.} Mỗi cặp $(\texttt{userId}, \texttt{movieId})$ duy nhất
+được ánh xạ sang một chỉ số nguyên liên tục $(i, j)$ với
+$i \in [0, m)$, $j \in [0, n)$ qua hai \texttt{dict}. Ma trận xếp hạng
+$A \in \mathbb{R}^{m\times n}$ được dựng dưới định dạng CSR
+(Compressed Sparse Row), với $a_{ij}$ là điểm người dùng $i$ chấm phim $j$
+(mặc định $0$ nếu chưa đánh giá). Vì hầu hết cặp $(i, j)$ không có dữ liệu,
+$A$ là ma trận \emph{cực thưa}.
+
+\textbf{Thống kê thực tế.} \cref{tab:movielens-stats} tóm tắt kích thước của
+bộ dữ liệu sau khi đọc và xây dựng ma trận.
+
+\begin{table}[ht]
+\centering
+\caption{Thống kê ma trận đánh giá MovieLens 25M sau tiền xử lý.}
+\label{tab:movielens-stats}
+\begin{tabular}{lr}
+\toprule
+\textbf{Thuộc tính} & \textbf{Giá trị} \\
+\midrule
+Số người dùng $m$        & \mlM \\
+Số phim $n$              & \mlN \\
+Tổng phần tử $mn$        & $\approx 9.60 \times 10^9$ \\
+Phần tử khác $0$ ($\mathrm{nnz}$) & \mlNNZ \\
+Mật độ ma trận           & \mlDensity \\
+$\|A\|_F^2$ (tính trực tiếp) & \mlEnergy \\
+Break-even $k_{be}^{\text{thưa}} = \mathrm{nnz}/(m+n+1)$
+                         & \mlKbe \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Kích thước $mn \approx 9.6 \times 10^9$ vượt yêu cầu $10^5$ phần tử của đề bài
+gấp năm bậc; số đánh giá $25\times 10^6$ cũng vượt mốc 100\,000 mà đề bài đặt
+ra. Đây là một trong những bộ dữ liệu phù hợp nhất hiện có để minh hoạ
+Randomized SVD trên ma trận lớn.
+
+\subsubsection{Bộ dữ liệu phụ: Ảnh xám $512\times 512$}\label{subsubsec:image}
+
+Để minh hoạ một tình huống mà Randomized SVD \emph{thực sự nén được} dung
+lượng, nhóm bổ sung một thí nghiệm trên ảnh xám tiêu chuẩn
+\texttt{skimage.data.camera} -- ảnh chụp một thợ quay phim cầm máy ảnh, kích
+thước $512 \times 512$ pixel, mỗi pixel là số nguyên 8-bit (sau khi chuẩn hóa
+thành \texttt{float64}). Ma trận có $\mathrm{nnz} = m n = 262\,144$ (hầu hết
+khác $0$), do đó break-even
+$k_{be}^{\text{dày}} = 512 \cdot 512 / 1025 \approx 256$.
+
+\subsection{Ngôn ngữ, thư viện và cấu trúc dự án}\label{subsec:tools}
+
+\textbf{Ngôn ngữ:} Python 3 (chạy trên Google Colab CPU runtime).
+
+\textbf{Thư viện chính:}
+\begin{itemize}
+    \item \texttt{numpy}: véc-tơ/ma trận, QR phân tích, SVD trên ma trận nhỏ.
+    \item \texttt{scipy.sparse}: cấu trúc CSR cho ma trận đánh giá thưa.
+    \item \texttt{scikit-image}: tải ảnh \texttt{camera} làm dữ liệu phụ.
+    \item \texttt{scikit-learn} (\texttt{sklearn.utils.extmath.randomized\_svd}):
+    chỉ dùng làm \emph{baseline tham chiếu} trong benchmark; không dùng cho
+    kết quả chính.
+    \item \texttt{matplotlib}: vẽ đồ thị phổ kỳ dị, năng lượng tích lũy, sai số.
+    \item \texttt{pandas}: đọc \texttt{ratings.csv}.
+\end{itemize}
+
+\textbf{Cấu trúc dự án} (gốc \texttt{Randomized-SVD-in-compress-Data/}):
+\begin{itemize}
+    \item \texttt{src/rsvd.py} -- cài đặt Randomized SVD tự viết
+    (\cref{alg:rsvd}).
+    \item \texttt{src/experiment\_movielens.py} -- thí nghiệm ma trận thưa.
+    \item \texttt{src/experiment\_image.py} -- thí nghiệm nén ảnh.
+    \item \texttt{src/benchmark.py} -- so sánh thời gian với
+    \texttt{sklearn} và \texttt{numpy} full SVD.
+    \item \texttt{src/test\_rsvd.py} -- kiểm thử đơn vị, đối chiếu với
+    \texttt{numpy.linalg.svd}.
+    \item \texttt{svd\_compressData.ipynb} -- notebook chính chạy end-to-end
+    trên Colab.
+    \item \texttt{report/}, \texttt{results/} -- báo cáo và kết quả số.
+\end{itemize}
+
+\subsection{Mô tả đoạn mã trọng tâm}\label{subsec:code-walk}
+
+\subsubsection{Tính tổng năng lượng từ ma trận thưa}
+
+Đại lượng $\|A\|_F^2$ là \emph{cốt lõi} của tiêu chuẩn chọn $k$. Đối với ma
+trận CSR, tính trực tiếp từ \eqref{eq:total-energy-direct} tốn
+$\mathcal{O}(\mathrm{nnz})$:
+
+\begin{lstlisting}[caption={Tính chính xác $\|A\|_F^2$ từ ma trận thưa.}]
+total_energy = float((A.power(2)).sum())   # ||A||_F^2 = sum_{ij} A_ij^2
+\end{lstlisting}
+
+\begin{remark}[Bug điển hình]
+Cách tính sai phổ biến (cũng từng có trong notebook gốc của nhóm) là
+\texttt{total\_energy = np.sum(s**2)} với \texttt{s} là các giá trị kỳ dị do
+Randomized SVD trả về. Đây thực ra chỉ là tổng năng lượng của $k_{\max}$
+thành phần đầu, không phải toàn bộ $\|A\|_F^2$. Hệ quả: tỉ lệ năng lượng giữ
+lại bị \emph{overestimate} -- nghiêm trọng hơn nếu $k_{\max}$ nhỏ. Toàn bộ
+thực nghiệm của báo cáo dùng công thức đúng từ
+\eqref{eq:total-energy-direct}.
+\end{remark}
+
+\subsubsection{Hàm chọn $k$ theo tỉ lệ năng lượng}
+
+\begin{lstlisting}[caption={Hàm xác định $k^\star$ theo ngưỡng $\eta$.}]
+def choose_k_by_energy(singular_values, eta, total_energy):
+    """Tra ve k nho nhat sao cho sum(s_i^2, i<=k)/total_energy >= eta."""
+    cum = np.cumsum(singular_values**2)
+    idx = np.where(cum / total_energy >= eta)[0]
+    return None if len(idx) == 0 else int(idx[0]) + 1
+\end{lstlisting}
+
+\subsubsection{Tính sai số Frobenius mà không dựng tường minh $A_k$}
+
+\begin{lstlisting}[caption={Sai số Frobenius nhanh từ phổ kỳ dị (Eckart--Young).}]
+retained = float(np.sum(s[:k_star]**2))
+err_F    = float(np.sqrt(max(total_energy - retained, 0.0)))
+\end{lstlisting}
+
+Công thức này tránh việc tạo $A_k$ dày kích thước $m\times n$, vốn không khả
+thi với ma trận MovieLens (cần $\sim 76$ GB cho $A_k$ dạng dày).
+
+\subsection{Kết quả -- Thí nghiệm A: ảnh xám $512\times 512$}\label{subsec:exp-image}
+
+Áp dụng \cref{alg:rsvd} (tự viết) với $k \in \{5, 10, 20, 50, 100, 200\}$,
+$p = 10$, $q = 2$ trên ảnh \texttt{camera}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.92\linewidth]{image_reconstruction_grid.png}
+\caption{Tái dựng ảnh xám $512\times 512$ ở các giá trị $k$ khác nhau bằng
+Randomized SVD tự viết. Với $k = 50$, ảnh tái dựng đã rất sát ảnh gốc; với
+$k = 100$, sự khác biệt không còn nhận biết được bằng mắt thường.}
+\label{fig:image-recon}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\begin{subfigure}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{image_singular_spectrum.png}
+    \caption{Phổ kỳ dị (log scale) -- suy giảm nhanh.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{image_compression_curve.png}
+    \caption{Tỉ lệ nén theo $k$.}
+\end{subfigure}
+\caption{Phân tích ảnh xám: phổ kỳ dị tập trung mạnh ở vài chục thành phần
+đầu, dẫn đến tỉ lệ nén tốt cho mọi $k < k_{be}^{\text{dày}} \approx 256$.}
+\label{fig:image-curves}
+\end{figure}
+
+\begin{table}[ht]
+\centering
+\caption{Kết quả nén ảnh xám tự cài Randomized SVD.}
+\label{tab:image-results}
+\begin{tabular}{rrrrr}
+\toprule
+$k$ & Tỉ lệ nén & Sai số tương đối $\|A-A_k\|_F/\|A\|_F$
+    & Năng lượng giữ lại & Thời gian (s) \\
+\midrule
+5   & $51.15\times$ & $17.20\%$ & $97.04\%$ & $0.13$ \\
+10  & $25.58\times$ & $13.50\%$ & $98.18\%$ & $0.13$ \\
+20  & $12.79\times$ & $10.13\%$ & $98.97\%$ & $0.12$ \\
+50  & $\phantom{0}5.12\times$ & $\phantom{0}6.40\%$ & $99.59\%$ & $1.46$ \\
+100 & $\phantom{0}2.56\times$ & $\phantom{0}3.98\%$ & $99.84\%$ & $1.21$ \\
+200 & $\phantom{0}1.28\times$ & $\phantom{0}1.80\%$ & $99.97\%$ & $5.83$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Nhận xét.} Với $k = 50$, ảnh được nén $5\times$ trong khi vẫn giữ
+$\sim 99.6\%$ năng lượng và sai số tương đối chỉ $\sim 6\%$. Đây là tình
+huống mà Randomized SVD \emph{thực sự nén được} cả về dung lượng lẫn về thông
+tin. Đường tỉ lệ nén (\cref{fig:image-curves}) cắt mức $1\times$ (break-even)
+đúng vị trí $k \approx 256$ như công thức lý thuyết \eqref{eq:be-dense} dự
+đoán.
+
+\subsection{Kết quả -- Thí nghiệm B: MovieLens 25M}\label{subsec:exp-movielens}
+
+Áp dụng \cref{alg:rsvd} với $k_{\max} = 500$, $p = 10$, $q = 2$ trên ma trận
+$A \in \mathbb{R}^{\mlM \times \mlN}$.
+
+\begin{figure}[ht]
+\centering
+\begin{subfigure}[t]{0.31\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{movielens_spectrum.png}
+    \caption{Phổ kỳ dị (log scale).}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.31\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{movielens_energy.png}
+    \caption{Năng lượng tích lũy.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.31\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{movielens_error.png}
+    \caption{Sai số Frobenius.}
+\end{subfigure}
+\caption{Phân tích Randomized SVD trên ma trận đánh giá MovieLens 25M. Phổ
+suy giảm chậm sau khoảng $50$ thành phần đầu, dẫn tới $k^\star$ rất lớn để
+đạt năng lượng cao -- không thuận lợi cho mục tiêu nén dung lượng.}
+\label{fig:movielens-curves}
+\end{figure}
+
+\begin{table}[ht]
+\centering
+\caption{Giá trị $k^\star$ chọn theo tỉ lệ năng lượng $\eta$ và đánh giá nén
+trên MovieLens 25M.}
+\label{tab:movielens-results}
+\begin{tabular}{rrrrr}
+\toprule
+$\eta$ & $k^\star$ & $\|A-A_{k^\star}\|_F/\|A\|_F$
+    & Storage nén vs. CSR gốc & Compresses? \\
+\midrule
+$0.90$ & \mlKstarNinety       & $\sqrt{0.10} \approx 31.6\%$
+       & $\approx 27.6\times$ \emph{lớn hơn} & \textbf{No} \\
+$0.95$ & \mlKstarNinetyFive   & $\sqrt{0.05} \approx 22.4\%$
+       & $\approx 35.8\times$ \emph{lớn hơn} & \textbf{No} \\
+$0.99$ & \mlKstarNinetyNine   & $\sqrt{0.01} \approx 10.0\%$
+       & $\approx 43.5\times$ \emph{lớn hơn} & \textbf{No} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Nhận xét.} Trên ma trận xếp hạng cực kỳ thưa của MovieLens, biểu diễn
+nén $(U_k, \Sigma_k, V_k)$ \emph{lớn hơn} CSR gốc nhiều lần. Đây là hệ quả
+trực tiếp của \eqref{eq:be-sparse}: $k_{be}^{\text{thưa}} = \mlKbe$, trong
+khi $k^\star$ nhỏ nhất (cho $\eta = 0.90$) đã là \mlKstarNinety, gấp gần
+$3\times$ $k_{be}$. Sai số Frobenius tương đối ở $k^\star = \mlKstarNinetyFive$
+là $\mlFroberror$ (tuyệt đối), tương ứng $\sim 22.4\%$ tương đối -- mặt thông
+tin được nén nhưng mặt dung lượng thì không.
+
+\subsection{Kết quả -- Benchmark: tự viết vs.\ \texttt{sklearn} vs.\ full SVD}\label{subsec:bench}
+
+Để xác nhận cài đặt tự viết là đúng và hiệu quả, nhóm đối chứng với
+\texttt{sklearn.utils.extmath.randomized\_svd} và \texttt{numpy.linalg.svd}
+trên các ma trận Gauss ngẫu nhiên dày, $n \in \{200, 500, 1000, 2000\}$,
+hạng đích $k = 50$.
+
+\begin{figure}[ht]
+\centering
+\begin{subfigure}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{benchmark_runtime.png}
+    \caption{Thời gian chạy theo $n$.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{benchmark_accuracy.png}
+    \caption{Sai số Frobenius (rank-$50$).}
+\end{subfigure}
+\caption{Benchmark thời gian và độ chính xác. Cài đặt tự viết đạt độ chính
+xác xấp xỉ \texttt{sklearn} và full SVD, với thời gian giảm theo lý thuyết.}
+\label{fig:benchmark}
+\end{figure}
+
+\begin{table}[ht]
+\centering
+\caption{Thời gian chạy (giây) của ba phương pháp trên ma trận $n\times n$
+Gauss ngẫu nhiên, $k = 50$.}
+\label{tab:benchmark-time}
+\begin{tabular}{rrrr}
+\toprule
+$n$ & Custom RSVD & \texttt{sklearn} RSVD & \texttt{numpy} full SVD \\
+\midrule
+$200$  & $0.192$ & $0.852$ & $0.678$ \\
+$500$  & $0.336$ & $1.776$ & $2.116$ \\
+$1000$ & $0.035$ & $0.345$ & $0.257$ \\
+$2000$ & $0.044$ & $0.390$ & $1.680$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Nhận xét.}
+\begin{itemize}
+    \item Cài đặt tự viết \emph{nhanh hơn} \texttt{sklearn} ở mọi kích thước
+    test ($n \le 2000$), một phần do không có overhead validation và
+    sklearn dùng default $p = 10, q_{\text{iter}} = 4$ (chặt hơn cài đặt
+    nhóm). Sai số tương đối giữa hai cài đặt $< 0.01\%$.
+
+    \item So với full SVD: Custom RSVD đạt speedup $\sim 38\times$ ở
+    $n = 2000$. Tỷ số gia tăng nhanh theo $n$, đúng như \eqref{eq:rsvd-cost}
+    dự đoán: $\mathcal{C}_{\mathrm{full}} = \mathcal{O}(n^3)$ trong khi
+    $\mathcal{C}_{\mathrm{RSVD}} = \mathcal{O}(n^2 \ell)$.
+\end{itemize}
+
+\subsection{Sản phẩm đạt được}\label{subsec:deliverables}
+
+\begin{itemize}
+    \item \textbf{Mã nguồn:} \texttt{src/rsvd.py} (cài đặt \cref{alg:rsvd}),
+    \texttt{src/experiment\_\{image,movielens\}.py}, \texttt{src/benchmark.py},
+    \texttt{src/test\_rsvd.py} (đơn vị test).
+    \item \textbf{File thực thi end-to-end:} \texttt{svd\_compressData.ipynb}
+    chạy trên Colab bằng \emph{Run all} -- clone repo từ GitHub, tải dữ liệu,
+    chạy ba thí nghiệm, hiển thị plots inline.
+    \item \textbf{Dữ liệu đầu ra (JSON):} \texttt{results/image\_experiment.json},
+    \texttt{results/movielens\_experiment.json},
+    \texttt{results/benchmark.json}.
+    \item \textbf{Đồ thị (PNG):} 9 hình trong \texttt{report/images/results/}
+    -- phổ kỳ dị, năng lượng tích lũy, sai số, ma trận nén, runtime.
+\end{itemize}
+
+Toàn bộ artifact được commit vào git repo
+\url{https://github.com/ngtan369/Randomized-SVD-in-compress-Data} và có thể
+được teacher tái dựng trong $\sim 3$ phút trên Colab CPU runtime.

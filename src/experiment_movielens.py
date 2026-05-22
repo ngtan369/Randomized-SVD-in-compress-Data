@@ -67,18 +67,94 @@ except Exception as _exc:  # pragma: no cover - fallback path
 # --------------------------------------------------------------------------- #
 # Paths
 # --------------------------------------------------------------------------- #
-DATA_PATH = PROJECT_ROOT / "data" / "movielens_sparse.npz"
+DATA_DIR = PROJECT_ROOT / "data"
+DATA_PATH = DATA_DIR / "movielens_sparse.npz"  # cache (CSR npz)
+ZIP_PATH = DATA_DIR / "ml-25m.zip"             # cache (raw download)
+ML_DIR = DATA_DIR / "ml-25m"                   # cache (extracted)
 RESULTS_PATH = PROJECT_ROOT / "results" / "movielens_experiment.json"
+NUMBERS_TEX = PROJECT_ROOT / "results" / "movielens_numbers.tex"
 IMG_DIR = PROJECT_ROOT / "report" / "images" / "results"
 PLOT_ENERGY = IMG_DIR / "movielens_energy.png"
 PLOT_ERROR = IMG_DIR / "movielens_error.png"
 PLOT_SPECTRUM = IMG_DIR / "movielens_spectrum.png"
 
+ML25M_URL = "https://files.grouplens.org/datasets/movielens/ml-25m.zip"
+# Bộ dữ liệu này cũng được mirror trên Kaggle:
+# https://www.kaggle.com/datasets/grouplens/movielens-25m-dataset
+
+# Bật/tắt synthetic fallback bằng env var MOVIELENS_USE_SYNTHETIC=1
+USE_SYNTHETIC_ONLY = os.environ.get("MOVIELENS_USE_SYNTHETIC", "0") == "1"
+# Timeout download (giây). Có thể override bằng env var MOVIELENS_DOWNLOAD_TIMEOUT.
+DOWNLOAD_TIMEOUT = int(os.environ.get("MOVIELENS_DOWNLOAD_TIMEOUT", "60"))
+
 
 # --------------------------------------------------------------------------- #
-# 1. Synthetic sparse rating matrix
+# 1a. Tải MovieLens 25M thật từ GroupLens (= bản Kaggle)
 # --------------------------------------------------------------------------- #
-def build_or_load_matrix(
+def _download_ml25m() -> bool:
+    """Tải và giải nén ml-25m.zip vào DATA_DIR/ml-25m/. Trả về True nếu thành công."""
+    import urllib.request
+    import zipfile
+    import shutil
+
+    if (ML_DIR / "ratings.csv").exists():
+        return True
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if not ZIP_PATH.exists():
+        print(f"      Downloading {ML25M_URL} (~250 MB)...")
+        try:
+            req = urllib.request.Request(
+                ML25M_URL,
+                headers={"User-Agent": "Mozilla/5.0 (academic project)"},
+            )
+            with urllib.request.urlopen(req, timeout=DOWNLOAD_TIMEOUT) as r:
+                with open(ZIP_PATH, "wb") as fp:
+                    shutil.copyfileobj(r, fp)
+        except Exception as exc:  # network / DNS / timeout
+            print(f"      Download FAILED: {exc}")
+            if ZIP_PATH.exists():
+                ZIP_PATH.unlink()
+            return False
+    print(f"      Extracting to {ML_DIR}/ ...")
+    try:
+        with zipfile.ZipFile(ZIP_PATH) as z:
+            z.extractall(DATA_DIR)
+    except Exception as exc:
+        print(f"      Extraction FAILED: {exc}")
+        return False
+    return (ML_DIR / "ratings.csv").exists()
+
+
+def _build_real_movielens_matrix() -> sparse.csr_matrix | None:
+    """Đọc ratings.csv thật, build CSR. Trả về None nếu tải thất bại."""
+    if not _download_ml25m():
+        return None
+    import pandas as pd
+
+    csv_path = ML_DIR / "ratings.csv"
+    print(f"      Reading {csv_path.name} ...")
+    df = pd.read_csv(csv_path, usecols=["userId", "movieId", "rating"])
+    print(f"      Loaded {len(df):,} ratings")
+
+    # Ánh xạ ID liên tục
+    uniq_u = df["userId"].unique()
+    uniq_m = df["movieId"].unique()
+    u_map = {u: i for i, u in enumerate(uniq_u)}
+    m_map = {v: j for j, v in enumerate(uniq_m)}
+    rows = df["userId"].map(u_map).to_numpy(dtype=np.int32)
+    cols = df["movieId"].map(m_map).to_numpy(dtype=np.int32)
+    vals = df["rating"].to_numpy(dtype=np.float64)
+    A = sparse.csr_matrix(
+        (vals, (rows, cols)), shape=(len(uniq_u), len(uniq_m))
+    )
+    print(f"      Built CSR shape={A.shape}, nnz={A.nnz:,}")
+    return A
+
+
+# --------------------------------------------------------------------------- #
+# 1b. Synthetic fallback (mô phỏng MovieLens khi không tải được)
+# --------------------------------------------------------------------------- #
+def _build_synthetic_matrix(
     m: int = 5000,
     n: int = 2000,
     latent_rank: int = 10,
@@ -99,10 +175,6 @@ def build_or_load_matrix(
          probability, so heavy raters and popular movies dominate the
          observed mass — this yields strong leading singular values.
     """
-    if DATA_PATH.exists():
-        A = sparse.load_npz(DATA_PATH).tocsr()
-        return A
-
     rng = np.random.default_rng(seed)
 
     # --- Latent factors (rank-r model) ----------------------------------
@@ -144,10 +216,45 @@ def build_or_load_matrix(
     A = sparse.coo_matrix((vals, (rows, cols)), shape=(m, n)).tocsr()
     A.sum_duplicates()
     A.eliminate_zeros()
+    return A
 
+
+# --------------------------------------------------------------------------- #
+# 1c. Hàm chính: ưu tiên dữ liệu thật, fallback synthetic
+# --------------------------------------------------------------------------- #
+def build_or_load_matrix() -> tuple[sparse.csr_matrix, str]:
+    """Trả về (CSR ma trận đánh giá, data_source).
+
+    Thứ tự ưu tiên:
+      1. Cache CSR đã lưu (data/movielens_sparse.npz) -- nhãn tự lưu trong cache.
+      2. Tải MovieLens 25M thật từ GroupLens.
+      3. Sinh synthetic (env var MOVIELENS_USE_SYNTHETIC=1 buộc dùng phương án này).
+    """
+    # 1) Cache npz
+    label_file = DATA_DIR / "movielens_source.txt"
+    if DATA_PATH.exists() and label_file.exists():
+        source = label_file.read_text().strip()
+        print(f"      Cache hit: {DATA_PATH.name} (source={source})")
+        return sparse.load_npz(DATA_PATH).tocsr(), source
+
+    # 2) Tải dữ liệu thật trừ khi bị disable
+    if not USE_SYNTHETIC_ONLY:
+        print("      Trying real MovieLens 25M (GroupLens / Kaggle mirror)...")
+        A = _build_real_movielens_matrix()
+        if A is not None:
+            DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
+            sparse.save_npz(DATA_PATH, A)
+            label_file.write_text("real_grouplens")
+            return A, "real_grouplens"
+        print("      Real data unavailable — falling back to synthetic.")
+
+    # 3) Synthetic fallback
+    print("      Building synthetic 5000x2000 sparse matrix...")
+    A = _build_synthetic_matrix()
     DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
     sparse.save_npz(DATA_PATH, A)
-    return A
+    label_file.write_text("synthetic_fallback")
+    return A, "synthetic_fallback"
 
 
 # --------------------------------------------------------------------------- #
@@ -240,8 +347,8 @@ def plot_spectrum(s: np.ndarray, path: Path, top: int = 100) -> None:
 def main() -> None:
     np.random.seed(42)
 
-    print("[1/6] Building synthetic sparse MovieLens-like matrix...")
-    A = build_or_load_matrix()
+    print("[1/6] Loading MovieLens rating matrix (real first, synthetic fallback)...")
+    A, data_source = build_or_load_matrix()
     m, n = A.shape
     nnz = int(A.nnz)
     density = nnz / (m * n)
@@ -348,6 +455,7 @@ def main() -> None:
 
     print("[6/6] Writing results and plots...")
     out = {
+        "data_source": data_source,
         "shape": [m, n],
         "nnz": nnz,
         "density": density,
@@ -367,6 +475,46 @@ def main() -> None:
     with open(RESULTS_PATH, "w") as fp:
         json.dump(out, fp, indent=2)
     print(f"      JSON -> {RESULTS_PATH}")
+
+    # ---- LaTeX macros: report đọc trực tiếp các giá trị này ----
+    src_label = {
+        "real_grouplens": "MovieLens~25M (GroupLens / Kaggle)",
+        "synthetic_fallback": "MovieLens-like synthetic ($5000\\times 2000$)",
+    }.get(data_source, data_source)
+
+    def _fmt_int(x: int) -> str:
+        return f"{x:,}".replace(",", "{,}")
+
+    k90 = selected_k["0.90"]
+    k95 = selected_k["0.95"]
+    k99 = selected_k["0.99"]
+    err_k95 = next(
+        (r["frobenius_error"] for r in results_per_eta
+         if r.get("eta") == 0.95 and r.get("k") is not None),
+        frob_errors[-1],
+    )
+
+    tex_lines = [
+        "% Auto-generated by src/experiment_movielens.py -- do not edit.",
+        f"\\renewcommand{{\\mlSource}}{{{src_label}}}",
+        f"\\renewcommand{{\\mlM}}{{{_fmt_int(m)}}}",
+        f"\\renewcommand{{\\mlN}}{{{_fmt_int(n)}}}",
+        f"\\renewcommand{{\\mlNNZ}}{{{_fmt_int(nnz)}}}",
+        f"\\renewcommand{{\\mlDensity}}{{{density*100:.2f}\\%}}",
+        f"\\renewcommand{{\\mlEnergy}}{{$\\sim {total_energy:.2e}$}}",
+        f"\\renewcommand{{\\mlKbe}}{{{break_even_k:.1f}}}",
+        f"\\renewcommand{{\\mlKstarNinety}}"
+            f"{{{'---' if k90 is None else _fmt_int(k90)}}}",
+        f"\\renewcommand{{\\mlKstarNinetyFive}}"
+            f"{{{'---' if k95 is None else _fmt_int(k95)}}}",
+        f"\\renewcommand{{\\mlKstarNinetyNine}}"
+            f"{{{'---' if k99 is None else _fmt_int(k99)}}}",
+        f"\\renewcommand{{\\mlFroberror}}{{{_fmt_int(int(round(err_k95)))}}}",
+        "",
+    ]
+    NUMBERS_TEX.parent.mkdir(parents=True, exist_ok=True)
+    NUMBERS_TEX.write_text("\n".join(tex_lines), encoding="utf-8")
+    print(f"      TeX  -> {NUMBERS_TEX}")
 
     IMG_DIR.mkdir(parents=True, exist_ok=True)
     plot_energy(cum_ratio, selected_k, PLOT_ENERGY)

@@ -1,0 +1,294 @@
+% =====================================================================
+\section{Cơ sở lý thuyết}\label{sec:theory}
+% =====================================================================
+
+Phần này trình bày các khái niệm và định lý nền tảng cần dùng trong báo cáo.
+Mọi định nghĩa được phát biểu kèm giải thích ý nghĩa, các định lý quan trọng
+được chứng minh hoặc phác thảo chứng minh đầy đủ.
+
+\subsection{Một số khái niệm chuẩn bị}\label{subsec:prelim}
+
+\begin{definition}[Hệ trực chuẩn và ma trận trực giao]\label{def:orthonormal}
+Cho không gian Euclide $\mathbb{R}^m$ với tích trong chuẩn
+$\langle x, y\rangle = x^T y$. Hệ véc-tơ
+$\{u_1, u_2, \dots, u_k\} \subset \mathbb{R}^m$ được gọi là \emph{trực chuẩn}
+nếu
+\[
+    u_i^T u_j = \delta_{ij} =
+    \begin{cases} 1 & \text{nếu } i = j,\\ 0 & \text{nếu } i \neq j.\end{cases}
+\]
+Ma trận $U \in \mathbb{R}^{m\times m}$ với các cột tạo thành hệ trực chuẩn
+được gọi là \emph{ma trận trực giao}. Khi đó $U^T U = U U^T = I_m$ và
+$U^{-1} = U^T$.
+\end{definition}
+
+\begin{definition}[Chuẩn Frobenius]\label{def:frobenius}
+Với $A \in \mathbb{R}^{m\times n}$, chuẩn Frobenius được xác định bởi
+\[
+    \|A\|_F \;=\; \sqrt{\sum_{i=1}^{m}\sum_{j=1}^{n} a_{ij}^2}
+            \;=\; \sqrt{\operatorname{tr}(A^T A)}
+            \;=\; \sqrt{\operatorname{tr}(A A^T)}.
+\]
+Chuẩn này bất biến qua phép nhân với ma trận trực giao: nếu $Q$ trực giao thì
+$\|Q A\|_F = \|A\|_F$ và $\|A Q\|_F = \|A\|_F$.
+\end{definition}
+
+\begin{proof}[Bất biến với phép trực giao]
+Nếu $Q$ là ma trận trực giao thì
+$\|Q A\|_F^2 = \operatorname{tr}((QA)^T (QA))
+= \operatorname{tr}(A^T Q^T Q A) = \operatorname{tr}(A^T A) = \|A\|_F^2.$
+Tương tự cho nhân bên phải.
+\end{proof}
+
+\begin{definition}[Hạng của ma trận]\label{def:rank}
+Hạng $r = \operatorname{rank}(A)$ của ma trận $A \in \mathbb{R}^{m\times n}$
+là số chiều của không gian cột (column space) của $A$, đồng thời cũng bằng số
+chiều của không gian hàng. Luôn có $r \le \min(m, n)$.
+\end{definition}
+
+\subsection{Định lý phân tích giá trị kỳ dị}\label{subsec:svd-theorem}
+
+\begin{theorem}[SVD đầy đủ]\label{thm:svd}
+Với mọi ma trận $A \in \mathbb{R}^{m\times n}$ tồn tại các ma trận trực giao
+$U \in \mathbb{R}^{m\times m}$, $V \in \mathbb{R}^{n\times n}$ và một ma trận
+đường chéo suy rộng $\Sigma \in \mathbb{R}^{m\times n}$ sao cho
+\begin{equation}\label{eq:svd}
+    A \;=\; U\, \Sigma\, V^T,
+\end{equation}
+trong đó $\Sigma$ chỉ có các phần tử khác $0$ nằm trên đường chéo chính,
+ký hiệu $\sigma_i = \Sigma_{ii}$ với $i = 1, 2, \dots, p$, $p = \min(m, n)$,
+và thỏa mãn
+\[
+    \sigma_1 \;\ge\; \sigma_2 \;\ge\; \dots \;\ge\; \sigma_p \;\ge\; 0.
+\]
+Các số $\sigma_i$ được gọi là \emph{giá trị kỳ dị} của $A$; các cột của $U$
+gọi là \emph{véc-tơ kỳ dị trái}, các cột của $V$ là \emph{véc-tơ kỳ dị phải}.
+\end{theorem}
+
+\begin{proof}[Phác thảo chứng minh dựa trên định lý phổ]
+Ma trận $A^T A \in \mathbb{R}^{n\times n}$ là đối xứng và nửa xác định dương:
+với mọi $x \in \mathbb{R}^n$, $x^T A^T A\, x = \|Ax\|_2^2 \ge 0$. Theo định lý
+phổ cho ma trận đối xứng, tồn tại $V \in \mathbb{R}^{n\times n}$ trực giao và
+$D = \operatorname{diag}(\lambda_1, \dots, \lambda_n)$ với
+$\lambda_1 \ge \dots \ge \lambda_n \ge 0$ sao cho $A^T A = V D V^T$.
+
+Đặt $\sigma_i = \sqrt{\lambda_i}$ với $i = 1, \dots, r = \operatorname{rank}(A)$.
+Với $i \le r$, định nghĩa $u_i = (1/\sigma_i)\, A v_i$ (trong đó $v_i$ là cột
+thứ $i$ của $V$). Kiểm tra trực tiếp:
+\[
+    u_i^T u_j = \frac{1}{\sigma_i \sigma_j} v_i^T A^T A v_j
+              = \frac{\lambda_j}{\sigma_i\sigma_j} v_i^T v_j = \delta_{ij},
+\]
+nên $\{u_1, \dots, u_r\}$ trực chuẩn. Mở rộng thành cơ sở trực chuẩn của
+$\mathbb{R}^m$ bằng quy trình Gram--Schmidt để được $U$ trực giao. Khi đó
+$A V = U \Sigma$, hay tương đương $A = U\Sigma V^T$.
+\end{proof}
+
+\begin{remark}[Liên hệ với phổ]
+Từ $A = U\Sigma V^T$ ta có
+\[
+    A^T A \;=\; V\, \Sigma^T \Sigma\, V^T, \qquad
+    A A^T \;=\; U\, \Sigma \Sigma^T\, U^T.
+\]
+Vậy $\sigma_i^2$ chính là các trị riêng của $A^T A$ (và của $A A^T$),
+$v_i$ là véc-tơ riêng của $A^T A$, $u_i$ là véc-tơ riêng của $A A^T$.
+Đây là cơ sở để tính SVD bằng phương pháp lặp Lanczos/ARPACK hoặc phương
+pháp Jacobi đối với $A^T A$.
+\end{remark}
+
+\subsubsection*{Ý nghĩa hình học của SVD}
+
+Ánh xạ tuyến tính $x \mapsto Ax$ có thể được phân tích thành ba bước:
+\begin{enumerate}
+    \item Đổi cơ sở trực chuẩn qua $V^T$ (xoay/phản xạ trong $\mathbb{R}^n$);
+    \item Co giãn theo từng trục bởi các hệ số $\sigma_i$;
+    \item Đổi cơ sở trực chuẩn qua $U$ (xoay/phản xạ trong $\mathbb{R}^m$).
+\end{enumerate}
+Do đó, hình ảnh của hình cầu đơn vị qua $A$ là một \emph{ellipsoid} có các bán
+trục bằng các giá trị kỳ dị $\sigma_i$, định hướng bởi các véc-tơ kỳ dị trái
+$u_i$. \cref{fig:svd-geometry} minh họa ý tưởng này trong $\mathbb{R}^2$.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.0]
+    % Left: unit circle
+    \draw[->] (-2.2,0) -- (2.2,0) node[right]{$x_1$};
+    \draw[->] (0,-2.2) -- (0,2.2) node[above]{$x_2$};
+    \draw[thick, blue] (0,0) circle (1.5);
+    \draw[->,thick,blue!70!black] (0,0) -- (1.5,0)
+        node[below right]{$v_1$};
+    \draw[->,thick,blue!70!black] (0,0) -- (0,1.5)
+        node[above left]{$v_2$};
+    \node at (0,-2.6) {Hình cầu đơn vị};
+
+    % Middle arrow
+    \node at (3.2,0) {$\xrightarrow{\; A \;}$};
+
+    % Right: ellipse
+    \begin{scope}[xshift=6.2cm]
+    \draw[->] (-2.2,0) -- (2.6,0) node[right]{$y_1$};
+    \draw[->] (0,-1.4) -- (0,1.4) node[above]{$y_2$};
+    \draw[thick, red, rotate=20] (0,0) ellipse (2 and 0.8);
+    \draw[->,thick,red!80!black,rotate=20] (0,0) -- (2,0)
+        node[below right]{$\sigma_1 u_1$};
+    \draw[->,thick,red!80!black,rotate=20] (0,0) -- (0,0.8)
+        node[above left]{$\sigma_2 u_2$};
+    \node at (0,-2.6) {Ảnh ellipsoid của $A$};
+    \end{scope}
+\end{tikzpicture}
+\caption{Ý nghĩa hình học của SVD: ma trận $A$ biến đổi hình cầu đơn vị
+trong $\mathbb{R}^n$ thành một ellipsoid trong $\mathbb{R}^m$. Các bán trục
+chính có độ dài $\sigma_1 \ge \sigma_2 \ge \dots \ge \sigma_p$, định hướng
+bởi các véc-tơ kỳ dị trái $u_i$.}\label{fig:svd-geometry}
+\end{figure}
+
+\subsection{Compact SVD và Reduced SVD}\label{subsec:compact-svd}
+
+Gọi $r = \operatorname{rank}(A)$. Do
+$\sigma_{r+1} = \sigma_{r+2} = \dots = \sigma_p = 0$, phân tích SVD đầy đủ có
+thể được viết lại dưới dạng tổng dyadic
+\begin{equation}\label{eq:dyadic}
+    A \;=\; \sum_{i=1}^{p}\sigma_i u_i v_i^T
+       \;=\; \sum_{i=1}^{r}\sigma_i u_i v_i^T.
+\end{equation}
+
+\begin{definition}[Compact SVD]\label{def:compact-svd}
+Đặt
+$U_r = [u_1 \mid u_2 \mid \dots \mid u_r] \in \mathbb{R}^{m\times r}$,
+$\Sigma_r = \operatorname{diag}(\sigma_1, \dots, \sigma_r) \in \mathbb{R}^{r\times r}$,
+$V_r = [v_1 \mid \dots \mid v_r] \in \mathbb{R}^{n\times r}$. Khi đó
+\[
+    A \;=\; U_r\, \Sigma_r\, V_r^T,
+\]
+được gọi là \emph{Compact SVD} của $A$. So với SVD đầy đủ, Compact SVD chỉ
+giữ lại các thành phần thực sự đóng góp vào $A$, loại bỏ tất cả các cột
+tương ứng với $\sigma_i = 0$.
+\end{definition}
+
+Khi $r \ll \min(m, n)$ (ma trận hạng thấp thật sự), Compact SVD đã tiết kiệm
+đáng kể bộ nhớ: từ $\mathcal{O}(m^2 + n^2 + mn)$ phần tử của SVD đầy đủ xuống
+$\mathcal{O}(r(m + n))$ phần tử.
+
+\subsection{Định lý Eckart--Young: xấp xỉ hạng thấp tốt nhất}\label{subsec:eckart-young}
+
+Định lý sau là kết quả nền tảng làm cơ sở cho mọi ứng dụng nén dữ liệu dựa
+trên SVD.
+
+\begin{theorem}[Eckart--Young 1936]\label{thm:eckart-young}
+Cho ma trận $A \in \mathbb{R}^{m\times n}$ với SVD đầy đủ $A = U\Sigma V^T$
+và $r = \operatorname{rank}(A)$. Với $1 \le k \le r$, đặt
+\begin{equation}\label{eq:Ak}
+    A_k \;=\; \sum_{i=1}^{k}\sigma_i u_i v_i^T \;=\; U_k\, \Sigma_k\, V_k^T,
+\end{equation}
+trong đó $U_k, \Sigma_k, V_k$ chứa $k$ cột/giá trị đầu tiên. Khi đó $A_k$ là
+\emph{xấp xỉ hạng-$k$ tốt nhất} của $A$ theo chuẩn Frobenius, tức là
+\begin{equation}\label{eq:eckart-young}
+    \min_{B:\ \operatorname{rank}(B)\le k}\; \|A - B\|_F
+       \;=\; \|A - A_k\|_F
+       \;=\; \sqrt{\sum_{i=k+1}^{r}\sigma_i^2}.
+\end{equation}
+\end{theorem}
+
+\begin{proof}[Phác thảo chứng minh]
+Giả sử $B \in \mathbb{R}^{m\times n}$ có $\operatorname{rank}(B) \le k$. Khi
+đó không gian zero (null space) của $B$ có chiều ít nhất $n - k$, nên giao với
+không gian con $V_{k+1} = \operatorname{span}\{v_1, \dots, v_{k+1}\}$ (có chiều
+$k+1$) phải có chiều ít nhất $1$. Lấy $w \in V_{k+1} \cap \ker(B)$ với
+$\|w\|_2 = 1$, biểu diễn $w = \sum_{i=1}^{k+1}\alpha_i v_i$ với
+$\sum \alpha_i^2 = 1$. Khi đó:
+\[
+    \|A - B\|_2^2 \;\ge\; \|(A-B) w\|_2^2 \;=\; \|A w\|_2^2
+              \;=\; \sum_{i=1}^{k+1}\alpha_i^2 \sigma_i^2 \;\ge\; \sigma_{k+1}^2,
+\]
+chứng minh kết quả với chuẩn spectral. Đối với chuẩn Frobenius, lập luận sử
+dụng tính bất biến trực giao và một bài toán tối ưu lồi trên không gian các
+hệ số chéo (chi tiết xem Trefethen \& Bau \cite{trefethen1997}).
+\end{proof}
+
+\begin{remark}[Ý nghĩa thực tiễn]
+\cref{thm:eckart-young} khẳng định: trong tất cả các ma trận hạng không vượt
+quá $k$, $A_k$ làm tối thiểu sai số $\|A - B\|_F$, với cực tiểu chính bằng
+căn bậc hai của tổng bình phương các giá trị kỳ dị bị bỏ qua. Đây là lý do mọi
+phương pháp nén dữ liệu dựa trên SVD đều quy về việc \emph{giữ lại $k$ thành
+phần kỳ dị lớn nhất}.
+\end{remark}
+
+\subsection{Năng lượng dữ liệu và tiêu chuẩn chọn $k$}\label{subsec:energy}
+
+\begin{proposition}[Phân rã năng lượng]\label{prop:energy}
+Với $A = U\Sigma V^T$, ta có
+\begin{equation}\label{eq:energy-decomp}
+    \|A\|_F^2 \;=\; \sum_{i=1}^{r}\sigma_i^2.
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+Từ \cref{def:frobenius} và tính bất biến chuẩn Frobenius qua phép trực giao:
+$\|A\|_F = \|U\Sigma V^T\|_F = \|\Sigma\|_F$. Vì $\Sigma$ chỉ có các phần tử
+khác $0$ trên đường chéo nên
+$\|\Sigma\|_F^2 = \sum_{i=1}^{p}\sigma_i^2 = \sum_{i=1}^{r}\sigma_i^2$
+(do $\sigma_i = 0$ với $i > r$).
+\end{proof}
+
+\begin{definition}[Năng lượng dữ liệu]\label{def:energy}
+Đại lượng $\|A\|_F^2$ được gọi là \emph{tổng năng lượng} (total energy) của
+ma trận dữ liệu $A$. Mỗi $\sigma_i^2$ là \emph{năng lượng} đóng góp bởi thành
+phần kỳ dị thứ $i$. Tỉ số
+$\sigma_i^2 / \|A\|_F^2$ chính là tỉ trọng năng lượng của thành phần thứ $i$.
+\end{definition}
+
+Trên thực nghiệm với dữ liệu thực, dãy $(\sigma_i^2)$ thường suy giảm rất
+nhanh theo $i$ -- đặc biệt với dữ liệu có cấu trúc latent (như ảnh tự nhiên,
+ma trận tương quan). Đây chính là cơ sở để nén dữ liệu khả thi: một số ít
+giá trị kỳ dị đầu tiên đã chứa phần lớn năng lượng.
+
+\subsubsection*{Tiêu chuẩn chọn $k$ theo tỉ lệ năng lượng}
+
+Cho ngưỡng $\eta \in (0, 1)$ (ví dụ $0.90$, $0.95$, $0.99$), ta chọn $k$ nhỏ
+nhất thỏa mãn
+\begin{equation}\label{eq:energy-criterion}
+    \frac{\sum_{i=1}^{k}\sigma_i^2}{\sum_{i=1}^{r}\sigma_i^2} \;\ge\; \eta.
+\end{equation}
+
+\begin{corollary}[Cận sai số tương ứng]\label{cor:error-bound}
+Với $k$ chọn theo \eqref{eq:energy-criterion}, sai số tương đối bình phương
+được kiểm soát:
+\[
+    \frac{\|A - A_k\|_F^2}{\|A\|_F^2}
+       \;=\; 1 - \frac{\sum_{i=1}^{k}\sigma_i^2}{\sum_{i=1}^{r}\sigma_i^2}
+       \;\le\; 1 - \eta.
+\]
+\end{corollary}
+
+\begin{proof}
+Áp dụng \cref{thm:eckart-young} cho tử số và \cref{prop:energy} cho mẫu số:
+\[
+    \frac{\|A - A_k\|_F^2}{\|A\|_F^2}
+       \;=\; \frac{\sum_{i>k}\sigma_i^2}{\sum_{i=1}^{r}\sigma_i^2}
+       \;=\; 1 - \frac{\sum_{i \le k}\sigma_i^2}{\sum_{i=1}^{r}\sigma_i^2}
+       \;\le\; 1 - \eta. \qedhere
+\]
+\end{proof}
+
+\cref{cor:error-bound} cho biết: chọn $\eta = 0.95$ \emph{đảm bảo} sai số bình
+phương tương đối không vượt quá $5\%$. Đây là một mệnh đề \emph{định lượng và
+có thể kiểm chứng}, không phải một heuristic.
+
+\subsection{Tính khả thi tính toán}\label{subsec:complexity-svd}
+
+Mặc dù \cref{thm:eckart-young} cho ta xấp xỉ tốt nhất, việc \emph{tính} SVD
+đầy đủ trên ma trận lớn rất tốn kém:
+
+\begin{itemize}
+    \item Thuật toán SVD chuẩn (Golub--Reinsch, LAPACK \texttt{GESVD}) có độ
+    phức tạp $\mathcal{O}(mn\min(m,n))$ và yêu cầu lưu cả ma trận trung gian
+    dưới dạng dày.
+    \item Trên ma trận thưa, áp ngay GESVD đòi hỏi \emph{dày hóa} ma trận,
+    phá vỡ cấu trúc thưa và làm tăng bộ nhớ lên cấp $mn$ phần tử.
+    \item Với $m, n \sim 10^5$ (như MovieLens 25M), $mn \sim 10^{10}$ phần
+    tử dày -- vượt xa giới hạn RAM tiêu chuẩn.
+\end{itemize}
+
+Đây là động lực cho Randomized SVD: tính nhanh \emph{xấp xỉ} cho $k$ giá trị
+kỳ dị lớn nhất, với chi phí tỷ lệ thuận với $k$ và tận dụng được cấu trúc thưa
+của ma trận đầu vào. \cref{sec:algorithm} sẽ trình bày chi tiết.

@@ -1,120 +1,166 @@
-\documentclass[a4paper]{article}
-\usepackage[utf8]{vietnam}
-\usepackage{attachfile} 
-\usepackage{amsmath}  % ghi cac phep toan
-%\usepackage{indentfirst}  % auto intended - tự thụt đầu dòng
-\usepackage{a4wide,amssymb,epsfig,latexsym,array,hhline,fancyhdr}
-\usepackage{caption,subcaption} % chú thích
-\usepackage{graphicx}     % chèn hình ảnh
-\usepackage{listings}       % chèn code c, cpp, python, .. vào
-\usepackage{hyperref}     % tele to other tittle
-\usepackage{parskip}      % space between line
+% =====================================================================
+%  BÁO CÁO BÀI TẬP LỚN -- ĐẠI SỐ TUYẾN TÍNH (CSLT 242)
+%  Đề tài 10: Phân tích Randomized SVD và ứng dụng nén dữ liệu
+%  Nhóm L08 -- GVHD: Nguyễn Hữu Hiệp
+% =====================================================================
+\documentclass[12pt,a4paper]{article}
 
+% ---------- Vietnamese support ----------
+\usepackage[utf8]{vietnam}
+
+% ---------- Page geometry (per assignment I.1) ----------
+% Lề trên 2.5cm, dưới 2.5cm, trái 3.5cm, phải 2.0cm
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=3.5cm, right=2.0cm,
+            headheight=15pt, headsep=10pt]{geometry}
+
+% ---------- Line spacing 1.4 (per assignment I.1) ----------
+\usepackage{setspace}
+\setstretch{1.4}
+
+% ---------- Math ----------
+\usepackage{amsmath,amssymb,amsthm,amsfonts,mathtools}
+\usepackage{bm}
+
+% ---------- Theorem-like environments ----------
+\theoremstyle{plain}
+\newtheorem{theorem}{Định lý}[section]
+\newtheorem{lemma}[theorem]{Bổ đề}
+\newtheorem{proposition}[theorem]{Mệnh đề}
+\newtheorem{corollary}[theorem]{Hệ quả}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Định nghĩa}
+\newtheorem{example}[theorem]{Ví dụ}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Nhận xét}
+
+% Vietnamese "Chứng minh" for proof environment
+\renewcommand{\proofname}{\textbf{Chứng minh}}
+
+% ---------- Algorithms ----------
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\floatname{algorithm}{Thuật toán}
+\renewcommand{\algorithmicrequire}{\textbf{Đầu vào:}}
+\renewcommand{\algorithmicensure}{\textbf{Đầu ra:}}
+
+% ---------- Tables ----------
+\usepackage{booktabs,multirow,array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+
+% ---------- Figures and TikZ ----------
+\usepackage{graphicx}
+\usepackage{caption,subcaption}
+\captionsetup[figure]{labelfont=bf,font=small,name=Hình}
+\captionsetup[table]{labelfont=bf,font=small,name=Bảng}
+\usepackage{tikz}
+\usetikzlibrary{matrix,arrows.meta,positioning,shapes.geometric,
+                decorations.pathreplacing,calc,fit,backgrounds,patterns}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% ---------- Code listings ----------
+\usepackage{listings}
+\usepackage{xcolor}
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
-\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
-\lstdefinestyle{mystyle}{
-    backgroundcolor=\color{backcolour},   
+\definecolor{backcolour}{rgb}{0.96,0.96,0.93}
+\lstdefinestyle{python}{
+    backgroundcolor=\color{backcolour},
     commentstyle=\color{codegreen},
     keywordstyle=\color{magenta},
     numberstyle=\tiny\color{codegray},
     stringstyle=\color{codepurple},
     basicstyle=\ttfamily\footnotesize,
-    breakatwhitespace=false,         
-    breaklines=true,                 
-    captionpos=b,                    
-    keepspaces=true,                 
-    numbers=left,                    
-    numbersep=5pt,                  
-    showspaces=false,                
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
     showstringspaces=false,
-    showtabs=false,                  
-    tabsize=2
+    showtabs=false,
+    tabsize=2,
+    language=Python,
+    frame=single,
+    rulecolor=\color{codegray!30}
 }
-\lstset{style=mystyle}
-\definecolor{light-gray}{gray}{0.95}
-\newcommand{\code}[1]{\colorbox{light-gray}{\texttt{#1}}}
-\usepackage[framemethod=tikz]{mdframed}% For highlighting paragraph backgrounds
+\lstset{style=python}
 
+% ---------- Hyperref + cleveref (cross-refs) ----------
+\usepackage[hidelinks,unicode,colorlinks=true,linkcolor=black,citecolor=blue,
+            urlcolor=blue]{hyperref}
+\usepackage[capitalize]{cleveref}
+\crefname{theorem}{Định lý}{Định lý}
+\crefname{algorithm}{Thuật toán}{Thuật toán}
 
-\usepackage{lastpage}    % đánh số trang
-\usepackage[a4paper, top=2cm, bottom=4cm, left=2.5cm, right=2.5cm]{geometry}
-
-%=======================================================
-\setlength{\headheight}{40pt}
+% ---------- Header / footer ----------
+\usepackage{lastpage}
+\usepackage{fancyhdr}
 \pagestyle{fancy}
-\fancyhead{}
-\fancyhead[L]{
- \begin{tabular}{rl}
-    \begin{picture}(25,15)(0,0)
-    \put(0,-8){\includegraphics[width=8mm, height=8mm]{images/hcmut.png}}
-   \end{picture}&
-	\begin{tabular}{l}
-		\textbf{\bf \ttfamily Trường Đại Học Bách Khoa Tp.Hồ Chí Minh}\\
-		\textbf{\bf \ttfamily Khoa Khoa Học \& Kỹ Thuật Máy Tính}
-	\end{tabular} 	
- \end{tabular}
-}
-\fancyhead[R]{
-	\begin{tabular}{l}
-		\tiny \bf \\
-		\tiny \bf 
-	\end{tabular}  }
-\fancyfoot{} % clear all footer fields
-\fancyfoot[L]{\scriptsize \ttfamily Đại số tuyến tính - CSLT - 242}
-\fancyfoot[R]{\scriptsize \ttfamily Page {\thepage}/\pageref{LastPage}}
-\renewcommand{\headrulewidth}{0.5pt}
-\renewcommand{\footrulewidth}{0.5pt}
+\fancyhf{}
+\fancyhead[L]{\footnotesize Đề tài 10 -- Randomized SVD trong nén dữ liệu}
+\fancyhead[R]{\footnotesize Nhóm L08}
+\fancyfoot[L]{\scriptsize Đại số tuyến tính (CSLT 242)}
+\fancyfoot[R]{\scriptsize Trang \thepage{}/\pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
 
-\setcounter{secnumdepth}{3}
-\setcounter{tocdepth}{3}
-\makeatletter
-\newcounter {subsubsubsection}[subsubsection]
-\renewcommand\thesubsubsubsection{\thesubsubsection .\@alph\c@subsubsubsection}
+% ---------- Numerical macros generated from experiments ----------
+% file 'results/movielens_numbers.tex' is auto-generated by
+% src/experiment_movielens.py; if absent, fallback values below are used.
+\providecommand{\mlSource}{MovieLens~25M (GroupLens / Kaggle)}
+\providecommand{\mlM}{162{,}541}
+\providecommand{\mlN}{59{,}047}
+\providecommand{\mlNNZ}{25{,}000{,}095}
+\providecommand{\mlDensity}{0.26\%}
+\providecommand{\mlEnergy}{$\sim 3.13\times 10^{8}$}
+\providecommand{\mlKbe}{112.8}
+\providecommand{\mlKstarNinety}{303}
+\providecommand{\mlKstarNinetyFive}{392}
+\providecommand{\mlKstarNinetyNine}{477}
+\providecommand{\mlFroberror}{3{,}298}
+\IfFileExists{../results/movielens_numbers.tex}{%
+  \input{../results/movielens_numbers.tex}%
+}{}
 
-\newcommand*\l@subsubsubsection{\@dottedtocline{3}{10.0em}{4.1em}}
-\newcommand*{\subsubsubsectionmark}[1]{}
-\makeatother
+% Path shortcuts
+\graphicspath{{images/}{images/results/}}
 
-
-%\everymath{\color{blue}}%make in-line maths symbols blue to read/check easily
-%=======================================================
-
-%======================================================
+% =====================================================================
 \begin{document}
+
+% --- Title page -------------------------------------------------------
 \begin{titlepage}
+    \thispagestyle{empty}
+    \setstretch{1.1}
     \centering
-    \textbf{\Large ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH} \\
+    {\large\textbf{ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH}}\\[0.15cm]
+    {\large\textbf{TRƯỜNG ĐẠI HỌC BÁCH KHOA}}\\[0.15cm]
+    {\large\textbf{KHOA KHOA HỌC \& KỸ THUẬT MÁY TÍNH}}\\
+    \vspace{0.6cm}
+    \includegraphics[width=3.6cm]{images/hcmut.png}\\
     \vspace{0.5cm}
-    \textbf{\Large TRƯỜNG ĐẠI HỌC BÁCH KHOA} \\
-    \textbf{\Large KHOA KHOA HỌC \& KỸ THUẬT MÁY TÍNH} \\
-    \vspace{1.0cm}
-    \includegraphics[width=4.5cm]{images/hcmut.png} \\
-    \vspace{0.8cm}
-    \rule{\linewidth}{0.5mm} \\
-    \vspace{0.3cm}
-    {
+    \rule{\linewidth}{0.4mm}\\[0.25cm]
+    {\Large\textbf{BÁO CÁO BÀI TẬP LỚN}}\\[0.1cm]
+    {\Large\textbf{ĐẠI SỐ TUYẾN TÍNH}}\\[0.25cm]
+    {\LARGE\textbf{Đề tài 10}}\\[0.1cm]
+    {\large\textbf{Phân tích Randomized SVD (Truncated SVD)}}\\
+    {\large\textbf{và ứng dụng trong nén dữ liệu theo tỉ lệ năng lượng cho trước}}\\[0.25cm]
+    \rule{\linewidth}{0.4mm}\\
+    \vspace{0.5cm}
 
-    \LARGE\text{\textbf{BÁO CÁO BÀI TẬP LỚN}}\\
-    \LARGE\text{\textbf{ĐẠI SỐ TUYẾN TÍNH}}\\
-    \vspace{0.3cm}
-    \huge \text{\textbf{Đề tài 10}}\\
-    \vspace{0.15cm}
-    \Large \text{\textbf{Phân tích Randomized SVD (Truncated SVD)}}\\
-    \Large \text{\textbf{và ứng dụng trong nén dữ liệu}}\\
-    \Large \text{\textbf{theo tỉ lệ năng lượng cho trước}}\\
-
-    \vspace{0.4cm}
-    \rule{\linewidth}{0.5mm}
-    \vspace{0.4cm}
-
-    \Large\text{Giảng viên hướng dẫn: Nguyễn Hữu Hiệp}\\
-    \vspace{0.2cm}
-    \Large\text{Nhóm L05 -- Danh sách thành viên}\\
-    \vspace{0.15cm}
-    \normalsize
+    {\large\textbf{Giảng viên hướng dẫn:} Nguyễn Hữu Hiệp}\\[0.3cm]
+    {\large\textbf{Nhóm L08 -- Danh sách thành viên}}\\[0.1cm]
+    \small
     \begin{tabular}{rl}
+        \toprule
+        \textbf{MSSV} & \textbf{Họ và tên} \\
+        \midrule
         2213539 & Phạm Quốc Toàn \\
         2213496 & Nguyễn Quốc Tín \\
         2213299 & Nguyễn Trường Thịnh \\
@@ -124,20 +170,32 @@
         2213080 & Trương Hồng Tấn \\
         2213063 & Nguyễn Trung Tân \\
         2212922 & Nguyễn Quang Sáng \\
-    \end{tabular}\\
-    \vspace{0.8cm}
-    {\Large Thành phố Hồ Chí Minh, tháng 5/2026}}
-
+        \bottomrule
+    \end{tabular}
+    \vspace{0.6cm}\\
+    {\large Thành phố Hồ Chí Minh, tháng 5/2026}
 \end{titlepage}
-%======================================================
 
+% --- Front matter -----------------------------------------------------
+\renewcommand{\contentsname}{Mục lục}
+\renewcommand{\figurename}{Hình}
+\renewcommand{\tablename}{Bảng}
 
 \newpage
-\renewcommand{\contentsname}{Content}
-\renewcommand{\figurename}{Figure}
-\renewcommand{\tablename}{Table}
-
+\pagenumbering{roman}
 \tableofcontents
-\include{lcontent}
+\newpage
+\listoffigures
+\listoftables
+\newpage
+\pagenumbering{arabic}
+
+% --- Body sections ----------------------------------------------------
+\include{sections/01_introduction}
+\include{sections/02_theory}
+\include{sections/03_algorithm}
+\include{sections/04_experiments}
+\include{sections/05_conclusion}
+\include{sections/06_references}
 
 \end{document}

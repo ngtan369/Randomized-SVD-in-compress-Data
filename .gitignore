@@ -1,5 +1,8 @@
 # Auto-generated cache (re-created by experiment scripts)
 data/
+results/movielens_numbers.tex
+report/*.lof
+report/*.lot
 
 # Python
 __pycache__/
