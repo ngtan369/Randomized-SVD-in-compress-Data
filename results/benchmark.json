@@ -1,0 +1,132 @@
+{
+  "config": {
+    "k": 50,
+    "p": 10,
+    "q": 2,
+    "n_runs": 3,
+    "seed": 42,
+    "matrix_structure": "U_rand @ diag(0.95^i) @ V_rand.T + 1e-6 * noise",
+    "full_svd_timeout_sec": 60.0
+  },
+  "sizes": [
+    200,
+    500,
+    1000,
+    2000
+  ],
+  "methods": [
+    "custom_rsvd",
+    "sklearn_rsvd",
+    "numpy_full_svd"
+  ],
+  "results": [
+    {
+      "size": 200,
+      "method": "custom_rsvd",
+      "time_sec": 0.1919759730003534,
+      "frobenius_error": 0.24655055284012536,
+      "relative_error": 0.07698537817399032,
+      "n_runs_used": 3,
+      "timed_out": false
+    },
+    {
+      "size": 200,
+      "method": "sklearn_rsvd",
+      "time_sec": 0.8519424669998443,
+      "frobenius_error": 0.24649994374907186,
+      "relative_error": 0.07696957549186725,
+      "n_runs_used": 3,
+      "timed_out": false
+    },
+    {
+      "size": 200,
+      "method": "numpy_full_svd",
+      "time_sec": 0.6781858640001701,
+      "frobenius_error": 0.24642017855601325,
+      "relative_error": 0.07694466882067143,
+      "n_runs_used": 3,
+      "timed_out": false
+    },
+    {
+      "size": 500,
+      "method": "custom_rsvd",
+      "time_sec": 0.33599419600022884,
+      "frobenius_error": 0.24655815281449134,
+      "relative_error": 0.07698776476481042,
+      "n_runs_used": 3,
+      "timed_out": false
+    },
+    {
+      "size": 500,
+      "method": "sklearn_rsvd",
+      "time_sec": 1.7759982560000935,
+      "frobenius_error": 0.2465196956381911,
+      "relative_error": 0.07697575651438866,
+      "n_runs_used": 3,
+      "timed_out": false
+    },
+    {
+      "size": 500,
+      "method": "numpy_full_svd",
+      "time_sec": 2.1159669449998546,
+      "frobenius_error": 0.24642215206822216,
+      "relative_error": 0.07694529854196568,
+      "n_runs_used": 3,
+      "timed_out": false
+    },
+    {
+      "size": 1000,
+      "method": "custom_rsvd",
+      "time_sec": 0.03479508000009446,
+      "frobenius_error": 0.2464806704151802,
+      "relative_error": 0.07696357329021379,
+      "n_runs_used": 3,
+      "timed_out": false
+    },
+    {
+      "size": 1000,
+      "method": "sklearn_rsvd",
+      "time_sec": 0.34528753999984474,
+      "frobenius_error": 0.24649896734069182,
+      "relative_error": 0.07696928650401358,
+      "n_runs_used": 3,
+      "timed_out": false
+    },
+    {
+      "size": 1000,
+      "method": "numpy_full_svd",
+      "time_sec": 0.25733901700004935,
+      "frobenius_error": 0.2464237313287562,
+      "relative_error": 0.07694579406418486,
+      "n_runs_used": 3,
+      "timed_out": false
+    },
+    {
+      "size": 2000,
+      "method": "custom_rsvd",
+      "time_sec": 0.04360906600004455,
+      "frobenius_error": 0.2465232188600241,
+      "relative_error": 0.07697684909079656,
+      "n_runs_used": 3,
+      "timed_out": false
+    },
+    {
+      "size": 2000,
+      "method": "sklearn_rsvd",
+      "time_sec": 0.38994131900017237,
+      "frobenius_error": 0.24664591693749177,
+      "relative_error": 0.07701516155254616,
+      "n_runs_used": 3,
+      "timed_out": false
+    },
+    {
+      "size": 2000,
+      "method": "numpy_full_svd",
+      "time_sec": 1.6804730559997552,
+      "frobenius_error": 0.24642976381503887,
+      "relative_error": 0.07694766776285566,
+      "n_runs_used": 1,
+      "timed_out": false
+    }
+  ]
+}

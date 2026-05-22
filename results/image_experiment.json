@@ -1,0 +1,90 @@
+{
+  "image_source": "skimage.data.camera",
+  "rsvd_source": "custom",
+  "image_shape": [
+    512,
+    512
+  ],
+  "image_total_elements": 262144,
+  "frobenius_norm": 76080.22728015474,
+  "break_even_k": 255.75024390243902,
+  "ks": [
+    5,
+    10,
+    20,
+    50,
+    100,
+    200,
+    256
+  ],
+  "results": [
+    {
+      "k": 5,
+      "frobenius_error": 13086.992436596693,
+      "relative_error": 0.17201568534233846,
+      "compression_ratio": 51.15004878048781,
+      "compressed_floats": 5125,
+      "time_seconds": 0.13053172499985521,
+      "energy_retention": 0.9704106039962048
+    },
+    {
+      "k": 10,
+      "frobenius_error": 10274.07133355429,
+      "relative_error": 0.13504259517681863,
+      "compression_ratio": 25.575024390243904,
+      "compressed_floats": 10250,
+      "time_seconds": 0.1275162939996335,
+      "energy_retention": 0.9817634974879104
+    },
+    {
+      "k": 20,
+      "frobenius_error": 7708.505660925094,
+      "relative_error": 0.10132074964155412,
+      "compression_ratio": 12.787512195121952,
+      "compressed_floats": 20500,
+      "time_seconds": 0.1217253489999166,
+      "energy_retention": 0.989734105692074
+    },
+    {
+      "k": 50,
+      "frobenius_error": 4866.620049268965,
+      "relative_error": 0.06396694940655634,
+      "compression_ratio": 5.11500487804878,
+      "compressed_floats": 51250,
+      "time_seconds": 1.4589592929996797,
+      "energy_retention": 0.9959082293836184
+    },
+    {
+      "k": 100,
+      "frobenius_error": 3031.6197659867958,
+      "relative_error": 0.03984766968194354,
+      "compression_ratio": 2.55750243902439,
+      "compressed_floats": 102500,
+      "time_seconds": 1.2129658270000618,
+      "energy_retention": 0.9984121632209187
+    },
+    {
+      "k": 200,
+      "frobenius_error": 1371.296112079289,
+      "relative_error": 0.01802434300083889,
+      "compression_ratio": 1.278751219512195,
+      "compressed_floats": 205000,
+      "time_seconds": 5.833953957000176,
+      "energy_retention": 0.9996751230593867
+    },
+    {
+      "k": 256,
+      "frobenius_error": 828.186921327398,
+      "relative_error": 0.010885705142253533,
+      "compression_ratio": 0.9990243902439024,
+      "compressed_floats": 262400,
+      "time_seconds": 9.549966299000062,
+      "energy_retention": 0.9998815014235541
+    }
+  ],
+  "selected_k": {
+    "0.90": 2,
+    "0.95": 3,
+    "0.99": 21
+  }
+}

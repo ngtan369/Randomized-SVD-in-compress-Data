@@ -1,0 +1,69 @@
+\contentsline {section}{\numberline {1}Mở đầu}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Lý do chọn đề tài}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Mục tiêu của đề tài}{2}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Phạm vi nghiên cứu}{2}{subsection.1.3}%
+\contentsline {section}{\numberline {2}Cơ sở lý thuyết}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Một số khái niệm chuẩn bị}{3}{subsection.2.1}%
+\contentsline {paragraph}{Hệ trực chuẩn và ma trận trực giao.}{3}{section*.2}%
+\contentsline {paragraph}{Chuẩn Frobenius.}{3}{section*.3}%
+\contentsline {paragraph}{Hạng của ma trận.}{3}{section*.4}%
+\contentsline {subsection}{\numberline {2.2}Định lý phân tích giá trị kỳ dị (SVD)}{3}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Compact SVD (Reduced SVD)}{3}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Định lý Eckart--Young -- xấp xỉ hạng thấp tốt nhất}{4}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Năng lượng dữ liệu và tiêu chuẩn chọn $k$}{4}{subsection.2.5}%
+\contentsline {paragraph}{Khái niệm năng lượng.}{4}{section*.5}%
+\contentsline {paragraph}{Tiêu chuẩn năng lượng.}{4}{section*.6}%
+\contentsline {section}{\numberline {3}Thuật toán Randomized SVD}{4}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Ý tưởng và động cơ}{4}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Thuật toán}{4}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Cơ sở toán học của các bước}{5}{subsection.3.3}%
+\contentsline {paragraph}{Tại sao $Q^T A$ giữ nguyên cấu trúc kỳ dị?}{5}{section*.7}%
+\contentsline {paragraph}{Vai trò của over-sampling và power iteration.}{5}{section*.8}%
+\contentsline {subsection}{\numberline {3.4}Phân tích độ phức tạp}{5}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Sai số xấp xỉ}{5}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}Cài đặt từ đầu -- không dùng SVD đầy đủ}{5}{subsection.3.6}%
+\contentsline {paragraph}{Giải thích từng bước trong code.}{6}{section*.9}%
+\contentsline {subsection}{\numberline {3.7}Tiêu chuẩn chọn $k$ theo tỉ lệ năng lượng}{6}{subsection.3.7}%
+\contentsline {section}{\numberline {4}Kết quả, sản phẩm và thực nghiệm}{7}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Mô tả dữ liệu}{7}{subsection.4.1}%
+\contentsline {paragraph}{Nguồn dữ liệu.}{7}{section*.10}%
+\contentsline {paragraph}{Ý nghĩa các biến trong \texttt {ratings.csv}.}{7}{section*.11}%
+\contentsline {paragraph}{Cách đưa về ma trận số.}{7}{section*.12}%
+\contentsline {paragraph}{Thống kê thực tế (sau khi đọc dữ liệu).}{7}{section*.13}%
+\contentsline {subsection}{\numberline {4.2}Ngôn ngữ và thư viện}{7}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Mô tả các đoạn mã trọng tâm}{8}{subsection.4.3}%
+\contentsline {subsubsection}{\numberline {4.3.1}Đọc dữ liệu và dựng ma trận thưa}{8}{subsubsection.4.3.1}%
+\contentsline {subsubsection}{\numberline {4.3.2}Hàm xác định $k$ theo tỉ lệ năng lượng}{8}{subsubsection.4.3.2}%
+\contentsline {subsubsection}{\numberline {4.3.3}Chạy Randomized SVD và chọn $k$}{8}{subsubsection.4.3.3}%
+\contentsline {subsubsection}{\numberline {4.3.4}Sai số Frobenius -- tính nhanh từ phổ kỳ dị}{9}{subsubsection.4.3.4}%
+\contentsline {subsection}{\numberline {4.4}Kết quả thực nghiệm}{9}{subsection.4.4}%
+\contentsline {subsubsection}{\numberline {4.4.1}Phổ kỳ dị và năng lượng tích lũy}{9}{subsubsection.4.4.1}%
+\contentsline {paragraph}{Bảng các giá trị $k$ chọn được.}{9}{section*.14}%
+\contentsline {subsubsection}{\numberline {4.4.2}Sai số xấp xỉ Frobenius}{9}{subsubsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.5}Thí nghiệm trên dữ liệu DÀY -- nén ảnh xám}{9}{subsection.4.5}%
+\contentsline {paragraph}{So sánh trực quan ảnh gốc và ảnh tái dựng.}{9}{section*.15}%
+\contentsline {paragraph}{Đường cong tỉ lệ nén theo $k$.}{10}{section*.16}%
+\contentsline {paragraph}{Bảng kết quả định lượng.}{10}{section*.17}%
+\contentsline {paragraph}{Kết luận.}{11}{section*.18}%
+\contentsline {subsection}{\numberline {4.6}So sánh hiệu năng (Benchmarking)}{11}{subsection.4.6}%
+\contentsline {paragraph}{Đồ thị runtime.}{11}{section*.19}%
+\contentsline {paragraph}{Bảng tóm tắt thời gian.}{11}{section*.20}%
+\contentsline {paragraph}{Nhận xét.}{11}{section*.21}%
+\contentsline {subsection}{\numberline {4.7}Đánh giá dung lượng lưu trữ}{12}{subsection.4.7}%
+\contentsline {paragraph}{Cách so sánh.}{12}{section*.22}%
+\contentsline {paragraph}{Kết quả thực tế (với $k^\star =392$).}{12}{section*.23}%
+\contentsline {subsection}{\numberline {4.8}Phân tích và thảo luận}{12}{subsection.4.8}%
+\contentsline {paragraph}{Tại sao "nén" lại làm tăng dung lượng?}{12}{section*.24}%
+\contentsline {paragraph}{Khi nào Randomized SVD nén tốt?}{12}{section*.25}%
+\contentsline {paragraph}{Giá trị thực sự của Randomized SVD ở dữ liệu này.}{12}{section*.26}%
+\contentsline {paragraph}{Mối liên hệ giữa $\eta $, $k$, và sai số.}{12}{section*.27}%
+\contentsline {paragraph}{So sánh hiệu năng (định tính).}{12}{section*.28}%
+\contentsline {subsection}{\numberline {4.9}Sản phẩm đạt được}{13}{subsection.4.9}%
+\contentsline {section}{\numberline {5}Kết luận và hướng phát triển}{13}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Tóm tắt kết quả đạt được}{13}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Ưu điểm và hạn chế của Randomized SVD}{13}{subsection.5.2}%
+\contentsline {paragraph}{Ưu điểm.}{13}{section*.29}%
+\contentsline {paragraph}{Hạn chế.}{13}{section*.30}%
+\contentsline {subsection}{\numberline {5.3}So sánh ngắn với các phương pháp khác}{13}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Hướng phát triển}{14}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Tài liệu tham khảo}{14}{section.6}%

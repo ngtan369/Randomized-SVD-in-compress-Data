@@ -1,0 +1,23 @@
+# Auto-generated cache (re-created by experiment scripts)
+data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# LaTeX build artifacts (keep only main.pdf)
+report/*.aux
+report/*.log
+report/*.toc
+report/*.out
+report/*.fls
+report/*.fdb_latexmk
+report/*.synctex.gz
+
+# OS
+.DS_Store
+Thumbs.db

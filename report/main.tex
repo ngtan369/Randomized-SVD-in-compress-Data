@@ -1,0 +1,143 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8]{vietnam}
+\usepackage{attachfile} 
+\usepackage{amsmath}  % ghi cac phep toan
+%\usepackage{indentfirst}  % auto intended - tự thụt đầu dòng
+\usepackage{a4wide,amssymb,epsfig,latexsym,array,hhline,fancyhdr}
+\usepackage{caption,subcaption} % chú thích
+\usepackage{graphicx}     % chèn hình ảnh
+\usepackage{listings}       % chèn code c, cpp, python, .. vào
+\usepackage{hyperref}     % tele to other tittle
+\usepackage{parskip}      % space between line
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+\definecolor{light-gray}{gray}{0.95}
+\newcommand{\code}[1]{\colorbox{light-gray}{\texttt{#1}}}
+\usepackage[framemethod=tikz]{mdframed}% For highlighting paragraph backgrounds
+
+
+\usepackage{lastpage}    % đánh số trang
+\usepackage[a4paper, top=2cm, bottom=4cm, left=2.5cm, right=2.5cm]{geometry}
+
+%=======================================================
+\setlength{\headheight}{40pt}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[L]{
+ \begin{tabular}{rl}
+    \begin{picture}(25,15)(0,0)
+    \put(0,-8){\includegraphics[width=8mm, height=8mm]{images/hcmut.png}}
+   \end{picture}&
+	\begin{tabular}{l}
+		\textbf{\bf \ttfamily Trường Đại Học Bách Khoa Tp.Hồ Chí Minh}\\
+		\textbf{\bf \ttfamily Khoa Khoa Học \& Kỹ Thuật Máy Tính}
+	\end{tabular} 	
+ \end{tabular}
+}
+\fancyhead[R]{
+	\begin{tabular}{l}
+		\tiny \bf \\
+		\tiny \bf 
+	\end{tabular}  }
+\fancyfoot{} % clear all footer fields
+\fancyfoot[L]{\scriptsize \ttfamily Đại số tuyến tính - CSLT - 242}
+\fancyfoot[R]{\scriptsize \ttfamily Page {\thepage}/\pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0.5pt}
+
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+\makeatletter
+\newcounter {subsubsubsection}[subsubsection]
+\renewcommand\thesubsubsubsection{\thesubsubsection .\@alph\c@subsubsubsection}
+
+\newcommand*\l@subsubsubsection{\@dottedtocline{3}{10.0em}{4.1em}}
+\newcommand*{\subsubsubsectionmark}[1]{}
+\makeatother
+
+
+%\everymath{\color{blue}}%make in-line maths symbols blue to read/check easily
+%=======================================================
+
+%======================================================
+\begin{document}
+\begin{titlepage}
+    \centering
+    \textbf{\Large ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH} \\
+    \vspace{0.5cm}
+    \textbf{\Large TRƯỜNG ĐẠI HỌC BÁCH KHOA} \\
+    \textbf{\Large KHOA KHOA HỌC \& KỸ THUẬT MÁY TÍNH} \\
+    \vspace{1.0cm}
+    \includegraphics[width=4.5cm]{images/hcmut.png} \\
+    \vspace{0.8cm}
+    \rule{\linewidth}{0.5mm} \\
+    \vspace{0.3cm}
+    {
+
+    \LARGE\text{\textbf{BÁO CÁO BÀI TẬP LỚN}}\\
+    \LARGE\text{\textbf{ĐẠI SỐ TUYẾN TÍNH}}\\
+    \vspace{0.3cm}
+    \huge \text{\textbf{Đề tài 10}}\\
+    \vspace{0.15cm}
+    \Large \text{\textbf{Phân tích Randomized SVD (Truncated SVD)}}\\
+    \Large \text{\textbf{và ứng dụng trong nén dữ liệu}}\\
+    \Large \text{\textbf{theo tỉ lệ năng lượng cho trước}}\\
+
+    \vspace{0.4cm}
+    \rule{\linewidth}{0.5mm}
+    \vspace{0.4cm}
+
+    \Large\text{Giảng viên hướng dẫn: Nguyễn Hữu Hiệp}\\
+    \vspace{0.2cm}
+    \Large\text{Nhóm L05 -- Danh sách thành viên}\\
+    \vspace{0.15cm}
+    \normalsize
+    \begin{tabular}{rl}
+        2213539 & Phạm Quốc Toàn \\
+        2213496 & Nguyễn Quốc Tín \\
+        2213299 & Nguyễn Trường Thịnh \\
+        2213289 & Nguyễn Hữu Thịnh \\
+        2213228 & Hồ Viết Thiên \\
+        2213120 & Trương Hữu Thái \\
+        2213080 & Trương Hồng Tấn \\
+        2213063 & Nguyễn Trung Tân \\
+        2212922 & Nguyễn Quang Sáng \\
+    \end{tabular}\\
+    \vspace{0.8cm}
+    {\Large Thành phố Hồ Chí Minh, tháng 5/2026}}
+
+\end{titlepage}
+%======================================================
+
+
+\newpage
+\renewcommand{\contentsname}{Content}
+\renewcommand{\figurename}{Figure}
+\renewcommand{\tablename}{Table}
+
+\tableofcontents
+\include{lcontent}
+
+\end{document}
