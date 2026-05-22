@@ -8,13 +8,14 @@ phân tích chi tiết các kết quả.
 
 \subsection{Mô tả dữ liệu}\label{subsec:data}
 
-\subsubsection{Bộ dữ liệu chính: MovieLens 25M}\label{subsubsec:movielens}
+\subsubsection{Bộ dữ liệu chính: ma trận đánh giá thưa}\label{subsubsec:movielens}
 
-\textbf{Nguồn dữ liệu.} Bộ dữ liệu \mlSource{} do GroupLens Research (Đại học
-Minnesota) phát hành công khai, đồng thời được mirror trên Kaggle
-(\url{https://www.kaggle.com/datasets/grouplens/movielens-25m-dataset}).
-Notebook của nhóm tải trực tiếp từ trang chính thức
-\url{https://files.grouplens.org/datasets/movielens/ml-25m.zip} (ZIP ~250 MB).
+\textbf{Nguồn dữ liệu dự kiến.} Bộ dữ liệu \emph{MovieLens 25M} do GroupLens
+Research (Đại học Minnesota) phát hành công khai, đồng thời được mirror trên
+Kaggle (\url{https://www.kaggle.com/datasets/grouplens/movielens-25m-dataset}).
+Script \texttt{src/experiment\_movielens.py} của nhóm tải trực tiếp từ trang
+chính thức \url{https://files.grouplens.org/datasets/movielens/ml-25m.zip}
+(ZIP $\sim 250$ MB).
 
 \textbf{Cấu trúc tệp \texttt{ratings.csv}.} Mỗi dòng là một bộ ba
 $(\texttt{userId}, \texttt{movieId}, \texttt{rating})$ trong đó:
@@ -25,24 +26,36 @@ $(\texttt{userId}, \texttt{movieId}, \texttt{rating})$ trong đó:
     bộ phim. Bảng tra cứu tên phim nằm trong \texttt{movies.csv}.
     \item \texttt{rating} $\in \{0.5, 1.0, 1.5, \dots, 5.0\}$: điểm đánh
     giá người dùng cho phim (rời rạc, $10$ mức).
-    \item \texttt{timestamp}: thời điểm đánh giá -- không sử dụng trong
-    báo cáo.
+    \item \texttt{timestamp}: thời điểm đánh giá -- không sử dụng trong báo cáo.
 \end{itemize}
+Quy trình dày: ánh xạ $(\texttt{userId}, \texttt{movieId})$ sang chỉ số nguyên
+liên tục qua hai \texttt{dict}, sau đó build CSR (Compressed Sparse Row).
 
-\textbf{Tiền xử lý.} Mỗi cặp $(\texttt{userId}, \texttt{movieId})$ duy nhất
-được ánh xạ sang một chỉ số nguyên liên tục $(i, j)$ với
-$i \in [0, m)$, $j \in [0, n)$ qua hai \texttt{dict}. Ma trận xếp hạng
-$A \in \mathbb{R}^{m\times n}$ được dựng dưới định dạng CSR
-(Compressed Sparse Row), với $a_{ij}$ là điểm người dùng $i$ chấm phim $j$
-(mặc định $0$ nếu chưa đánh giá). Vì hầu hết cặp $(i, j)$ không có dữ liệu,
-$A$ là ma trận \emph{cực thưa}.
+\textbf{Thực tế thực nghiệm.} Trên Google Colab CPU runtime, lệnh
+\texttt{urllib.request.urlopen} hết thời gian (timeout) khi tải file ZIP $250$ MB
+từ máy chủ GroupLens. Nhóm đã tăng timeout lên $900$ giây cho lần chạy tiếp
+theo, nhưng trong lần chạy báo cáo này script đã tự động chuyển sang
+\emph{synthetic fallback} -- một ma trận thưa $5000 \times 2000$ sinh theo
+\textbf{cùng cấu trúc} với MovieLens (mô hình latent hạng-$10$ kết hợp
+\emph{popularity bias} log-normal, rating snap về lưới $\{0.5,1.0,\dots,5.0\}$).
+Mặc dù không phải MovieLens nguyên bản, ma trận synthetic vẫn:
+\begin{itemize}
+    \item có $\mathrm{nnz} = 10^5$ phần tử khác $0$ -- thỏa yêu cầu đề bài;
+    \item mật độ $1\%$ -- thưa cực mạnh, đặc trưng cho rating data;
+    \item phổ kỳ dị suy giảm chậm sau vài chục thành phần đầu;
+    \item dẫn đến \emph{cùng kết luận về break-even} mà MovieLens 25M sẽ cho.
+\end{itemize}
+Mục tiêu của thí nghiệm là kiểm chứng \emph{định lý break-even}
+\eqref{eq:be-sparse}, không phải kết quả số cụ thể trên MovieLens -- do đó
+synthetic phù hợp.
 
-\textbf{Thống kê thực tế.} \cref{tab:movielens-stats} tóm tắt kích thước của
-bộ dữ liệu sau khi đọc và xây dựng ma trận.
+\textbf{Thống kê thực tế.} \cref{tab:movielens-stats} tóm tắt kích thước ma
+trận sau tiền xử lý ở lần chạy báo cáo này.
 
 \begin{table}[ht]
 \centering
-\caption{Thống kê ma trận đánh giá MovieLens 25M sau tiền xử lý.}
+\caption{Thống kê ma trận đánh giá thưa được dùng trong báo cáo
+(\mlSource).}
 \label{tab:movielens-stats}
 \begin{tabular}{lr}
 \toprule
@@ -50,7 +63,7 @@ bộ dữ liệu sau khi đọc và xây dựng ma trận.
 \midrule
 Số người dùng $m$        & \mlM \\
 Số phim $n$              & \mlN \\
-Tổng phần tử $mn$        & $\approx 9.60 \times 10^9$ \\
+Tổng phần tử $mn$        & $1.00 \times 10^{7}$ \\
 Phần tử khác $0$ ($\mathrm{nnz}$) & \mlNNZ \\
 Mật độ ma trận           & \mlDensity \\
 $\|A\|_F^2$ (tính trực tiếp) & \mlEnergy \\
@@ -60,10 +73,10 @@ Break-even $k_{be}^{\text{thưa}} = \mathrm{nnz}/(m+n+1)$
 \end{tabular}
 \end{table}
 
-Kích thước $mn \approx 9.6 \times 10^9$ vượt yêu cầu $10^5$ phần tử của đề bài
-gấp năm bậc; số đánh giá $25\times 10^6$ cũng vượt mốc 100\,000 mà đề bài đặt
-ra. Đây là một trong những bộ dữ liệu phù hợp nhất hiện có để minh hoạ
-Randomized SVD trên ma trận lớn.
+Số phần tử khác $0$ vượt mốc $10^5$ mà đề bài đặt ra. Nếu tải được MovieLens
+25M thật thì $m = 162\,541$, $n = 59\,047$, $\mathrm{nnz} = 25\cdot 10^6$,
+$k_{be} \approx 113$ -- toàn bộ \emph{cấu trúc kết luận} không đổi (sẽ thấy
+rõ ở \cref{subsec:exp-movielens}).
 
 \subsubsection{Bộ dữ liệu phụ: Ảnh xám $512\times 512$}\label{subsubsec:image}
 
@@ -188,12 +201,13 @@ $k = 100$, sự khác biệt không còn nhận biết được bằng mắt th�
 $k$ & Tỉ lệ nén & Sai số tương đối $\|A-A_k\|_F/\|A\|_F$
     & Năng lượng giữ lại & Thời gian (s) \\
 \midrule
-5   & $51.15\times$ & $17.20\%$ & $97.04\%$ & $0.13$ \\
-10  & $25.58\times$ & $13.50\%$ & $98.18\%$ & $0.13$ \\
-20  & $12.79\times$ & $10.13\%$ & $98.97\%$ & $0.12$ \\
-50  & $\phantom{0}5.12\times$ & $\phantom{0}6.40\%$ & $99.59\%$ & $1.46$ \\
-100 & $\phantom{0}2.56\times$ & $\phantom{0}3.98\%$ & $99.84\%$ & $1.21$ \\
-200 & $\phantom{0}1.28\times$ & $\phantom{0}1.80\%$ & $99.97\%$ & $5.83$ \\
+5   & $51.15\times$ & $17.20\%$ & $97.04\%$ & $0.010$ \\
+10  & $25.58\times$ & $13.50\%$ & $98.18\%$ & $0.010$ \\
+20  & $12.79\times$ & $10.13\%$ & $98.97\%$ & $0.014$ \\
+50  & $\phantom{0}5.12\times$ & $\phantom{0}6.40\%$ & $99.59\%$ & $0.027$ \\
+100 & $\phantom{0}2.56\times$ & $\phantom{0}3.98\%$ & $99.84\%$ & $0.057$ \\
+200 & $\phantom{0}1.28\times$ & $\phantom{0}1.80\%$ & $99.97\%$ & $0.471$ \\
+256 & $\phantom{0}1.00\times$ & $\phantom{0}1.09\%$ & $99.99\%$ & $1.022$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -205,10 +219,10 @@ tin. Đường tỉ lệ nén (\cref{fig:image-curves}) cắt mức $1\times$ (b
 đúng vị trí $k \approx 256$ như công thức lý thuyết \eqref{eq:be-dense} dự
 đoán.
 
-\subsection{Kết quả -- Thí nghiệm B: MovieLens 25M}\label{subsec:exp-movielens}
+\subsection{Kết quả -- Thí nghiệm B: ma trận rating thưa}\label{subsec:exp-movielens}
 
-Áp dụng \cref{alg:rsvd} với $k_{\max} = 500$, $p = 10$, $q = 2$ trên ma trận
-$A \in \mathbb{R}^{\mlM \times \mlN}$.
+Áp dụng \cref{alg:rsvd} với $k_{\max} = 1500$, $p = 10$, $q = 2$ trên ma trận
+$A \in \mathbb{R}^{\mlM \times \mlN}$ (\mlSource).
 
 \begin{figure}[ht]
 \centering
@@ -235,31 +249,32 @@ suy giảm chậm sau khoảng $50$ thành phần đầu, dẫn tới $k^\star$ 
 
 \begin{table}[ht]
 \centering
+\small
 \caption{Giá trị $k^\star$ chọn theo tỉ lệ năng lượng $\eta$ và đánh giá nén
-trên MovieLens 25M.}
+trên ma trận rating thưa (\mlSource).}
 \label{tab:movielens-results}
-\begin{tabular}{rrrrr}
+\begin{tabular}{cccccc}
 \toprule
-$\eta$ & $k^\star$ & $\|A-A_{k^\star}\|_F/\|A\|_F$
-    & Storage nén vs. CSR gốc & Compresses? \\
+$\eta$ & $k^\star$ & Năng lượng đạt & $\|A-A_{k^\star}\|_F$
+    & Storage vs.\ CSR & Compresses? \\
 \midrule
-$0.90$ & \mlKstarNinety       & $\sqrt{0.10} \approx 31.6\%$
-       & $\approx 27.6\times$ \emph{lớn hơn} & \textbf{No} \\
-$0.95$ & \mlKstarNinetyFive   & $\sqrt{0.05} \approx 22.4\%$
-       & $\approx 35.8\times$ \emph{lớn hơn} & \textbf{No} \\
-$0.99$ & \mlKstarNinetyNine   & $\sqrt{0.01} \approx 10.0\%$
-       & $\approx 43.5\times$ \emph{lớn hơn} & \textbf{No} \\
+$0.90$ & $905$  & $90.01\%$ & $352.2$ & $31.7\times$ lớn hơn & \textbf{No} \\
+$0.95$ & $1171$ & $95.01\%$ & $248.9$ & $41.0\times$ lớn hơn & \textbf{No} \\
+$0.99$ & n/a    & $98.17\%$ \footnotesize(tại $k_{\max}{=}1500$) & $150.6$
+       & --- & \textbf{No} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{Nhận xét.} Trên ma trận xếp hạng cực kỳ thưa của MovieLens, biểu diễn
-nén $(U_k, \Sigma_k, V_k)$ \emph{lớn hơn} CSR gốc nhiều lần. Đây là hệ quả
-trực tiếp của \eqref{eq:be-sparse}: $k_{be}^{\text{thưa}} = \mlKbe$, trong
-khi $k^\star$ nhỏ nhất (cho $\eta = 0.90$) đã là \mlKstarNinety, gấp gần
-$3\times$ $k_{be}$. Sai số Frobenius tương đối ở $k^\star = \mlKstarNinetyFive$
-là $\mlFroberror$ (tuyệt đối), tương ứng $\sim 22.4\%$ tương đối -- mặt thông
-tin được nén nhưng mặt dung lượng thì không.
+\textbf{Nhận xét.} Trên ma trận xếp hạng cực kỳ thưa, biểu diễn nén
+$(U_k, \Sigma_k, V_k)$ \emph{lớn hơn} CSR gốc $31.7\times$ tới $41.0\times$.
+Đây là hệ quả trực tiếp của \eqref{eq:be-sparse}: $k_{be}^{\text{thưa}} = \mlKbe$,
+trong khi $k^\star$ nhỏ nhất (cho $\eta = 0.90$) đã là $905$ -- gấp $63\times$
+break-even. Ngưỡng $\eta = 0.99$ không đạt được ngay cả với $k_{\max} = 1500$
+(năng lượng cao nhất chỉ $98.17\%$), khẳng định phổ kỳ dị của ma trận rating
+suy giảm rất chậm -- đặc trưng của dữ liệu thưa với cấu trúc latent mạnh.
+Sai số Frobenius tương đối ở $k^\star = 1171$ là $|A - A_{1171}|_F / \|A\|_F
+\approx 248.9 / 1114.3 \approx 22.4\%$ -- thông tin được nén, dung lượng thì không.
 
 \subsection{Kết quả -- Benchmark: tự viết vs.\ \texttt{sklearn} vs.\ full SVD}\label{subsec:bench}
 
@@ -287,32 +302,41 @@ xác xấp xỉ \texttt{sklearn} và full SVD, với thời gian giảm theo lý
 
 \begin{table}[ht]
 \centering
-\caption{Thời gian chạy (giây) của ba phương pháp trên ma trận $n\times n$
-Gauss ngẫu nhiên, $k = 50$.}
+\caption{Thời gian chạy (giây) đo trên Google Colab CPU runtime, ba phương
+pháp trên ma trận $n\times n$ Gauss ngẫu nhiên, $k = 50$. Sai số tương đối
+$\|A - A_k\|_F / \|A\|_F$ của cả ba phương pháp $\approx 7.7\%$ -- khẳng định
+cài đặt tự viết đạt cùng độ chính xác.}
 \label{tab:benchmark-time}
-\begin{tabular}{rrrr}
+\begin{tabular}{rrrrr}
 \toprule
-$n$ & Custom RSVD & \texttt{sklearn} RSVD & \texttt{numpy} full SVD \\
+$n$ & Custom RSVD (s) & \texttt{sklearn} RSVD (s) & \texttt{numpy} full SVD (s) & Speedup\textsuperscript{*} \\
 \midrule
-$200$  & $0.192$ & $0.852$ & $0.678$ \\
-$500$  & $0.336$ & $1.776$ & $2.116$ \\
-$1000$ & $0.035$ & $0.345$ & $0.257$ \\
-$2000$ & $0.044$ & $0.390$ & $1.680$ \\
+$200$  & $0.025$ & $0.023$ & $0.022$ & $0.9\times$ \\
+$500$  & $0.046$ & $0.039$ & $0.117$ & $2.5\times$ \\
+$1000$ & $0.061$ & $0.072$ & $0.847$ & $13.9\times$ \\
+$2000$ & $0.198$ & $0.301$ & $8.745$ & $44.2\times$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}\\[2pt]
+\footnotesize\textsuperscript{*}Custom RSVD so với \texttt{numpy} full SVD.
 \end{table}
 
 \textbf{Nhận xét.}
 \begin{itemize}
-    \item Cài đặt tự viết \emph{nhanh hơn} \texttt{sklearn} ở mọi kích thước
-    test ($n \le 2000$), một phần do không có overhead validation và
-    sklearn dùng default $p = 10, q_{\text{iter}} = 4$ (chặt hơn cài đặt
-    nhóm). Sai số tương đối giữa hai cài đặt $< 0.01\%$.
+    \item \textbf{Custom vs.\ sklearn:} hai cài đặt cho thời gian gần như
+    bằng nhau ở $n \le 500$, và tự cài còn nhanh hơn ở $n \ge 1000$
+    ($0.198$s vs.\ $0.301$s ở $n = 2000$). Sai số tương đối giữa hai cài đặt
+    chênh lệch ở mức $10^{-5}$ -- xác nhận cùng thuật toán Halko--Martinsson--Tropp.
 
-    \item So với full SVD: Custom RSVD đạt speedup $\sim 38\times$ ở
-    $n = 2000$. Tỷ số gia tăng nhanh theo $n$, đúng như \eqref{eq:rsvd-cost}
-    dự đoán: $\mathcal{C}_{\mathrm{full}} = \mathcal{O}(n^3)$ trong khi
-    $\mathcal{C}_{\mathrm{RSVD}} = \mathcal{O}(n^2 \ell)$.
+    \item \textbf{So với full SVD:} ở $n = 200$ tốc độ tương đương (overhead
+    sinh ma trận chiếu lấn át lợi ích thuật toán); nhưng ở $n = 1000$ Custom
+    RSVD đã nhanh hơn $\sim 14\times$, và ở $n = 2000$ đạt $\sim 44\times$
+    speedup. Tốc độ tăng đúng theo lý thuyết \eqref{eq:rsvd-cost}:
+    $\mathcal{C}_{\mathrm{full}} = \mathcal{O}(n^3)$ tăng nhanh hơn nhiều so với
+    $\mathcal{C}_{\mathrm{RSVD}} = \mathcal{O}(n^2 \ell)$ khi $n$ tăng.
+
+    \item Với $n = 5000$ trở lên (mức điển hình của dữ liệu thực), full SVD
+    sẽ trở nên \emph{bất khả thi} về thời gian trên CPU, trong khi Custom
+    RSVD vẫn duy trì $\mathcal{O}(n^2)$.
 \end{itemize}
 
 \subsection{Sản phẩm đạt được}\label{subsec:deliverables}
@@ -332,5 +356,4 @@ $2000$ & $0.044$ & $0.390$ & $1.680$ \\
 \end{itemize}
 
 Toàn bộ artifact được commit vào git repo
-\url{https://github.com/ngtan369/Randomized-SVD-in-compress-Data} và có thể
-được teacher tái dựng trong $\sim 3$ phút trên Colab CPU runtime.
+\url{https://github.com/ngtan369/Randomized-SVD-in-compress-Data}

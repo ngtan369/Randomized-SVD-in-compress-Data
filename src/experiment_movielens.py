@@ -85,7 +85,7 @@ ML25M_URL = "https://files.grouplens.org/datasets/movielens/ml-25m.zip"
 # Bật/tắt synthetic fallback bằng env var MOVIELENS_USE_SYNTHETIC=1
 USE_SYNTHETIC_ONLY = os.environ.get("MOVIELENS_USE_SYNTHETIC", "0") == "1"
 # Timeout download (giây). Có thể override bằng env var MOVIELENS_DOWNLOAD_TIMEOUT.
-DOWNLOAD_TIMEOUT = int(os.environ.get("MOVIELENS_DOWNLOAD_TIMEOUT", "60"))
+DOWNLOAD_TIMEOUT = int(os.environ.get("MOVIELENS_DOWNLOAD_TIMEOUT", "900"))
 
 
 # --------------------------------------------------------------------------- #

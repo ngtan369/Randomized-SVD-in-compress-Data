@@ -36,10 +36,11 @@ cơ sở lý thuyết đến thực nghiệm:
         Randomized SVD \emph{nén thật} -- $5\times$ ở $k = 50$ với năng lượng
         $\sim 99.6\%$ và sai số tương đối $\sim 6\%$.
 
-        \item MovieLens 25M (\cref{subsec:exp-movielens}): kích thước
-        $\mlM\times\mlN$, $\mathrm{nnz} = \mlNNZ$, mật độ \mlDensity. Biểu
-        diễn nén \emph{lớn hơn} CSR gốc $\sim 28\times$ -- $44\times$ tuỳ
-        $\eta$, do $k^\star \gg k_{be}^{\text{thưa}} = \mlKbe$.
+        \item Ma trận rating thưa (\cref{subsec:exp-movielens}): kích thước
+        $\mlM \times \mlN$, $\mathrm{nnz} = \mlNNZ$, mật độ \mlDensity.
+        Biểu diễn nén \emph{lớn hơn} CSR gốc $31.7\times$--$41.0\times$ tuỳ
+        $\eta$, do $k^\star \gg k_{be}^{\text{thưa}} = \mlKbe$. Ngưỡng
+        $\eta = 0.99$ thậm chí không đạt được với $k_{\max} = 1500$.
     \end{itemize}
 
     \item \textbf{Phát hiện điều kiện break-even cho nén}
@@ -48,8 +49,9 @@ cơ sở lý thuyết đến thực nghiệm:
     phẩm điển hình, điều kiện này \emph{hiếm khi thoả mãn} -- một kết quả
     thực tế quan trọng nhưng thường bị các tài liệu chuẩn bỏ qua.
 
-    \item \textbf{Benchmark hiệu năng:} Custom RSVD đạt speedup $\sim 38\times$
-    so với full SVD ở $n = 2000$, tỷ số tăng theo $n$ đúng như lý thuyết.
+    \item \textbf{Benchmark hiệu năng (Google Colab CPU):} Custom RSVD đạt
+    speedup $\sim 44\times$ so với full SVD ở $n = 2000$ ($0.198$ s so với
+    $8.745$ s), tỷ số tăng theo $n^{} $ đúng như lý thuyết.
 \end{itemize}
 
 \subsection{Ưu điểm và hạn chế của Randomized SVD}\label{subsec:pros-cons}

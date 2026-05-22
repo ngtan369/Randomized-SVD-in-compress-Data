@@ -24,15 +24,15 @@
 \contentsline {subsection}{\numberline {3.8}Tóm tắt cài đặt}{14}{subsection.3.8}%
 \contentsline {section}{\numberline {4}Kết quả, sản phẩm và thực nghiệm}{15}{section.4}%
 \contentsline {subsection}{\numberline {4.1}Mô tả dữ liệu}{15}{subsection.4.1}%
-\contentsline {subsubsection}{\numberline {4.1.1}Bộ dữ liệu chính: MovieLens 25M}{15}{subsubsection.4.1.1}%
+\contentsline {subsubsection}{\numberline {4.1.1}Bộ dữ liệu chính: ma trận đánh giá thưa}{15}{subsubsection.4.1.1}%
 \contentsline {subsubsection}{\numberline {4.1.2}Bộ dữ liệu phụ: Ảnh xám $512\times 512$}{16}{subsubsection.4.1.2}%
 \contentsline {subsection}{\numberline {4.2}Ngôn ngữ, thư viện và cấu trúc dự án}{16}{subsection.4.2}%
 \contentsline {subsection}{\numberline {4.3}Mô tả đoạn mã trọng tâm}{17}{subsection.4.3}%
 \contentsline {subsubsection}{\numberline {4.3.1}Tính tổng năng lượng từ ma trận thưa}{17}{subsubsection.4.3.1}%
-\contentsline {subsubsection}{\numberline {4.3.2}Hàm chọn $k$ theo tỉ lệ năng lượng}{17}{subsubsection.4.3.2}%
-\contentsline {subsubsection}{\numberline {4.3.3}Tính sai số Frobenius mà không dựng tường minh $A_k$}{17}{subsubsection.4.3.3}%
+\contentsline {subsubsection}{\numberline {4.3.2}Hàm chọn $k$ theo tỉ lệ năng lượng}{18}{subsubsection.4.3.2}%
+\contentsline {subsubsection}{\numberline {4.3.3}Tính sai số Frobenius mà không dựng tường minh $A_k$}{18}{subsubsection.4.3.3}%
 \contentsline {subsection}{\numberline {4.4}Kết quả -- Thí nghiệm A: ảnh xám $512\times 512$}{18}{subsection.4.4}%
-\contentsline {subsection}{\numberline {4.5}Kết quả -- Thí nghiệm B: MovieLens 25M}{19}{subsection.4.5}%
+\contentsline {subsection}{\numberline {4.5}Kết quả -- Thí nghiệm B: ma trận rating thưa}{19}{subsection.4.5}%
 \contentsline {subsection}{\numberline {4.6}Kết quả -- Benchmark: tự viết vs.\ \texttt {sklearn} vs.\ full SVD}{20}{subsection.4.6}%
 \contentsline {subsection}{\numberline {4.7}Sản phẩm đạt được}{21}{subsection.4.7}%
 \contentsline {section}{\numberline {5}Kết luận và hướng phát triển}{22}{section.5}%

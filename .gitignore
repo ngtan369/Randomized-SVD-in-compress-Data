@@ -1,6 +1,7 @@
 # Auto-generated cache (re-created by experiment scripts)
 data/
-results/movielens_numbers.tex
+# Note: results/movielens_numbers.tex IS tracked so the static report displays
+# correct numbers without re-running experiments. Re-runs will overwrite it.
 report/*.lof
 report/*.lot
 
